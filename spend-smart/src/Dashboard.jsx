@@ -89,6 +89,7 @@ function Dashboard() {
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
   const [note, setNote] = useState('')
+  const [isRecurring, setIsRecurring] = useState(false)
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [deletingId, setDeletingId] = useState(null)
@@ -115,11 +116,45 @@ function Dashboard() {
       supabase.from('profiles').select('monthly_budget, display_name').eq('id', userId).maybeSingle(),
       supabase.from('category_budgets').select('category, amount').eq('user_id', userId).gt('amount', 0),
     ])
-    if (!expRes.error) setExpenses(expRes.data)
+    if (!expRes.error) {
+      await autoAddRecurring(userId, expRes.data)
+      const { data: fresh } = await supabase
+        .from('expenses').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+      setExpenses(fresh || expRes.data)
+    }
     if (!profileRes.error) setProfile(profileRes.data)
     if (!catRes.error) setCatBudgets(catRes.data || [])
     setFetching(false)
     setTimeout(() => setBarsAnimated(true), 100)
+  }
+
+  async function autoAddRecurring(userId, allExpenses) {
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+
+    const lastMonthRecurring = allExpenses.filter(e => {
+      const d = new Date(e.created_at)
+      return e.is_recurring && d >= startOfLastMonth && d < startOfMonth
+    })
+    if (!lastMonthRecurring.length) return
+
+    const thisMonthExpenses = allExpenses.filter(e => new Date(e.created_at) >= startOfMonth)
+
+    for (const rec of lastMonthRecurring) {
+      const alreadyAdded = thisMonthExpenses.some(
+        e => e.is_recurring && e.category === rec.category && e.note === rec.note
+      )
+      if (!alreadyAdded) {
+        await supabase.from('expenses').insert({
+          user_id: userId,
+          amount: rec.amount,
+          category: rec.category,
+          note: rec.note,
+          is_recurring: true,
+        })
+      }
+    }
   }
 
   async function handleAddExpense(e) {
@@ -128,7 +163,7 @@ function Dashboard() {
 
     const { data, error } = await supabase
       .from('expenses')
-      .insert({ user_id: user.id, amount: parseFloat(amount), category, note })
+      .insert({ user_id: user.id, amount: parseFloat(amount), category, note, is_recurring: isRecurring })
       .select()
       .single()
 
@@ -136,6 +171,7 @@ function Dashboard() {
       setAmount('')
       setCategory('')
       setNote('')
+      setIsRecurring(false)
       setExpenses(prev => [data, ...prev])
       setNewIds(prev => new Set(prev).add(data.id))
       setTimeout(() => {
@@ -319,6 +355,15 @@ function Dashboard() {
                 className="w-full border border-emerald-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
               />
             </div>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={isRecurring}
+                onChange={(e) => setIsRecurring(e.target.checked)}
+                className="w-4 h-4 accent-emerald-600 cursor-pointer"
+              />
+              <span className="text-sm text-gray-600 dark:text-gray-400">Recurring monthly</span>
+            </label>
             <button
               type="submit"
               disabled={loading}
@@ -358,7 +403,12 @@ function Dashboard() {
                     <div className="flex items-center gap-3">
                       <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: colors.bar }} />
                       <div>
-                        <p className="font-medium text-gray-800 dark:text-gray-100">{expense.category}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-gray-800 dark:text-gray-100">{expense.category}</p>
+                          {expense.is_recurring && (
+                            <span className="text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded-full">↻ recurring</span>
+                          )}
+                        </div>
                         {expense.note && <p className="text-sm text-gray-400 dark:text-gray-500">{expense.note}</p>}
                       </div>
                     </div>
