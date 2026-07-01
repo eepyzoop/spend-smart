@@ -2,21 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-@keyframes flyRight {
-  0%   { transform: translateX(-100px) translateY(0px)   rotate(-4deg); }
-  20%  { transform: translateX(20vw)   translateY(-22px) rotate( 5deg); }
-  40%  { transform: translateX(40vw)   translateY( 9px)  rotate(-3deg); }
-  60%  { transform: translateX(60vw)   translateY(-18px) rotate( 6deg); }
-  80%  { transform: translateX(80vw)   translateY( 5px)  rotate(-4deg); }
-  100% { transform: translateX(115vw)  translateY(-10px) rotate( 3deg); }
-}
-@keyframes flyLeft {
-  0%   { transform: translateX(115vw)  translateY(0px)   rotate( 4deg); }
-  20%  { transform: translateX(80vw)   translateY(-22px) rotate(-5deg); }
-  40%  { transform: translateX(60vw)   translateY( 9px)  rotate( 3deg); }
-  60%  { transform: translateX(40vw)   translateY(-18px) rotate(-6deg); }
-  80%  { transform: translateX(20vw)   translateY( 5px)  rotate( 4deg); }
-  100% { transform: translateX(-100px) translateY(-10px) rotate(-3deg); }
+@keyframes flyDown {
+  0%   { transform: translateY(-70px)  translateX( 0px)  rotate(-4deg); }
+  20%  { transform: translateY(20vh)   translateX(-13px) rotate( 5deg); }
+  40%  { transform: translateY(40vh)   translateX( 7px)  rotate(-3deg); }
+  60%  { transform: translateY(60vh)   translateX(-10px) rotate( 6deg); }
+  80%  { transform: translateY(80vh)   translateX( 5px)  rotate(-4deg); }
+  100% { transform: translateY(115vh)  translateX( -7px) rotate( 3deg); }
 }
 @keyframes orbDrift1 {
   0%, 100% { transform: translate(0px,  0px)  scale(1);    }
