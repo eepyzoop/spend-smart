@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
+import { useDarkMode } from './useDarkMode'
 
 function Login() {
+  useDarkMode()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
@@ -17,37 +19,39 @@ function Login() {
       navigate('/dashboard')
     }
   }
-  
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-emerald-50">
-      <div className="bg-white border border-emerald-100 p-8 rounded-xl shadow-md w-full max-w-sm">
-        <h2 className="text-2xl font-bold mb-2 text-emerald-800">Welcome Back</h2>
-        <p className="text-sm text-emerald-500 mb-6">Sign in to your account</p>
+    <div className="min-h-screen flex items-center justify-center bg-emerald-50 dark:bg-gray-900 transition-colors duration-300">
+      <div className="bg-white dark:bg-gray-800 border border-emerald-100 dark:border-gray-700 p-8 rounded-xl shadow-md w-full max-w-sm transition-colors duration-300">
+        <h2 className="text-2xl font-bold mb-2 text-emerald-800 dark:text-emerald-300">Welcome Back</h2>
+        <p className="text-sm text-emerald-500 dark:text-emerald-400 mb-6">Sign in to your account</p>
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border border-emerald-200 p-2 rounded-lg focus:outline-none focus:border-emerald-500"
+            className="border border-emerald-200 dark:border-gray-600 p-2 rounded-lg focus:outline-none focus:border-emerald-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
           />
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="border border-emerald-200 p-2 rounded-lg focus:outline-none focus:border-emerald-500"
+            className="border border-emerald-200 dark:border-gray-600 p-2 rounded-lg focus:outline-none focus:border-emerald-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
           />
-          <button type="submit" className="bg-emerald-600 text-white p-2 rounded-lg hover:bg-emerald-700 transition-colors">
+          <button
+            type="submit"
+            className="bg-emerald-600 text-white p-2 rounded-lg hover:bg-emerald-700 transition-all duration-200 active:scale-[0.98]"
+          >
             Log In
           </button>
         </form>
-        <p className="mt-4 text-sm text-center text-emerald-600">
+        <p className="mt-4 text-sm text-center text-emerald-600 dark:text-emerald-400">
           Don't have an account?{' '}
           <a href="/signup" className="font-semibold hover:underline">Sign up</a>
         </p>
-        {message && <p className="mt-2 text-sm text-center text-emerald-700">{message}</p>}
+        {message && <p className="mt-2 text-sm text-center text-red-500">{message}</p>}
       </div>
     </div>
   )
