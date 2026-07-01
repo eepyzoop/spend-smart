@@ -5,7 +5,6 @@ import { useDarkMode } from './useDarkMode'
 import { useAuth } from './useAuth'
 import Sidebar from './Sidebar'
 import Logo from './Logo'
-import FlyingDollars from './FlyingDollars'
 import FeedbackModal from './FeedbackModal'
 
 const CATEGORIES = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Health', 'Bills', 'Other']
@@ -92,7 +91,6 @@ function Settings() {
 
   return (
     <div className="min-h-screen bg-emerald-50 dark:bg-gray-900 transition-colors duration-300">
-      <FlyingDollars />
       <FeedbackModal
         isOpen={feedbackOpen}
         onClose={() => setFeedbackOpen(false)}

@@ -6,7 +6,6 @@ import { useDarkMode } from './useDarkMode'
 import { useAuth } from './useAuth'
 import Sidebar from './Sidebar'
 import Logo from './Logo'
-import FlyingDollars from './FlyingDollars'
 import FeedbackModal from './FeedbackModal'
 
 function useCountUp(target, duration = 750, ready = false) {
@@ -51,13 +50,10 @@ const CATEGORY_COLORS = {
 
 function SkeletonRow() {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-emerald-100 dark:border-gray-700 shadow-sm px-5 py-4 flex justify-between items-center animate-pulse">
-      <div className="flex items-center gap-3">
-        <div className="w-3 h-3 rounded-full bg-emerald-100 dark:bg-gray-600" />
-        <div className="space-y-1.5">
-          <div className="h-3 w-24 bg-emerald-100 dark:bg-gray-600 rounded" />
-          <div className="h-2.5 w-16 bg-emerald-50 dark:bg-gray-700 rounded" />
-        </div>
+    <div className="py-2.5 px-3 flex justify-between items-center border-b border-gray-100 dark:border-gray-700 animate-pulse">
+      <div className="flex items-center gap-2.5">
+        <div className="w-2.5 h-2.5 rounded-full bg-emerald-100 dark:bg-gray-600 flex-shrink-0" />
+        <div className="h-3 w-28 bg-emerald-100 dark:bg-gray-600 rounded" />
       </div>
       <div className="h-3 w-16 bg-emerald-100 dark:bg-gray-600 rounded" />
     </div>
@@ -122,7 +118,18 @@ function Dashboard() {
   const [barsAnimated, setBarsAnimated] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [aiOpen, setAiOpen] = useState(false)
   const [listLoaded, setListLoaded] = useState(false)
+  const [activeTab, setActiveTab] = useState('expenses')
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [showAllCategories, setShowAllCategories] = useState(false)
+  const [editSheetOpen, setEditSheetOpen] = useState(false)
+  const [editingExpense, setEditingExpense] = useState(null)
+  const [editAmount, setEditAmount] = useState('')
+  const [editCategory, setEditCategory] = useState('')
+  const [editNote, setEditNote] = useState('')
+  const [editRecurring, setEditRecurring] = useState(false)
+  const [editLoading, setEditLoading] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -211,6 +218,38 @@ function Dashboard() {
     setDeletingId(null)
   }
 
+  function openEditSheet(expense) {
+    setEditingExpense(expense)
+    setEditAmount(parseFloat(expense.amount).toFixed(2))
+    setEditCategory(expense.category)
+    setEditNote(expense.note || '')
+    setEditRecurring(expense.is_recurring || false)
+    setEditSheetOpen(true)
+  }
+
+  async function handleEditExpense(e) {
+    e.preventDefault()
+    setEditLoading(true)
+    const updates = {
+      amount: parseFloat(editAmount),
+      category: editCategory,
+      note: editNote,
+      is_recurring: editRecurring,
+    }
+    const { error } = await supabase
+      .from('expenses')
+      .update(updates)
+      .eq('id', editingExpense.id)
+      .eq('user_id', user.id)
+    if (!error) {
+      setExpenses(prev => prev.map(exp =>
+        exp.id === editingExpense.id ? { ...exp, ...updates } : exp
+      ))
+      setEditSheetOpen(false)
+    }
+    setEditLoading(false)
+  }
+
   async function handleLogout() {
     await supabase.auth.signOut()
     navigate('/login')
@@ -258,7 +297,6 @@ function Dashboard() {
           animation: 'orbDrift2 28s ease-in-out infinite',
         }} />
       </div>
-      <FlyingDollars />
       <FeedbackModal
         isOpen={feedbackOpen}
         onClose={() => setFeedbackOpen(false)}
@@ -290,6 +328,13 @@ function Dashboard() {
           <h1 className="text-lg font-semibold tracking-tight">SpendSmart</h1>
         </div>
         <button
+          onClick={() => setAiOpen(o => !o)}
+          className="w-8 h-8 rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-800 flex items-center justify-center transition-colors text-base"
+          title="AI Assistant"
+        >
+          ✨
+        </button>
+        <button
           onClick={() => setDark(d => !d)}
           className="w-8 h-8 rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-800 flex items-center justify-center transition-colors"
           title={dark ? 'Light mode' : 'Dark mode'}
@@ -298,202 +343,441 @@ function Dashboard() {
         </button>
       </nav>
 
-      <main className="max-w-2xl mx-auto p-6 space-y-6">
+      <main className="p-4 lg:p-6 space-y-4 lg:space-y-6">
 
-        {/* This Week */}
-        <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 dark:from-emerald-800 dark:to-emerald-950 text-white rounded-2xl shadow-md p-6 transition-colors duration-300">
-          <p className="text-emerald-300 text-xs font-medium uppercase tracking-wider mb-2">This Week</p>
-          <p className="text-4xl font-light tracking-tight">Rs {displayTotal.toFixed(2)}</p>
-        </div>
-
-        {/* Monthly Budget Progress */}
-        {(hasBudget || hasCatBudgets) && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-emerald-100 dark:border-gray-700 p-6 space-y-4 transition-colors duration-300">
-            <h2 className="text-sm font-semibold text-emerald-500 dark:text-emerald-400 uppercase tracking-widest">
-              Monthly Budget
-            </h2>
-            {hasBudget && (
-              <BudgetBar label="Overall" spent={monthlyTotal} limit={profile.monthly_budget} />
-            )}
-            {hasCatBudgets && catBudgets.map(cb => (
-              <BudgetBar
-                key={cb.category}
-                label={cb.category}
-                spent={monthlyCategoryTotals[cb.category] || 0}
-                limit={Number(cb.amount)}
-                color={CATEGORY_COLORS[cb.category]?.bar}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Category Breakdown (weekly) */}
-        {sortedCategories.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-emerald-100 dark:border-gray-700 p-6 transition-colors duration-300">
-            <h2 className="text-sm font-semibold text-emerald-500 dark:text-emerald-400 uppercase tracking-widest mb-5">
-              Spending by Category
-            </h2>
-            <div className="space-y-4">
-              {sortedCategories.map(([cat, total]) => {
-                const colors = CATEGORY_COLORS[cat] || CATEGORY_COLORS.Other
-                const rawPct = (total / weeklyTotal) * 100
-                const pct = rawPct > 0 && rawPct < 1 ? '<1' : Math.round(rawPct)
-                return (
-                  <div key={cat}>
-                    <div className="flex justify-between items-center mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: colors.bar }} />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{cat}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400 dark:text-gray-500">{pct}%</span>
-                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">Rs {total.toFixed(2)}</span>
-                      </div>
-                    </div>
-                    <div className="w-full h-3 rounded-full overflow-hidden" style={{ backgroundColor: colors.light }}>
-                      <div
-                        className="h-3 rounded-full"
-                        style={{
-                          width: barsAnimated ? `${rawPct}%` : '0%',
-                          backgroundColor: colors.bar,
-                          transition: 'width 0.6s ease-out',
-                        }}
-                      />
-                    </div>
-                  </div>
-                )
-              })}
+        {/* FULL-WIDTH SUMMARY CARD */}
+        <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 dark:from-emerald-800 dark:to-emerald-950 text-white rounded-2xl shadow-md overflow-hidden transition-colors duration-300">
+          <div className="grid grid-cols-2">
+            <div className="p-5 lg:p-6 border-r border-white/10">
+              <p className="text-white text-xs font-semibold uppercase tracking-widest mb-2">This Week</p>
+              <p className="text-3xl lg:text-4xl font-light tracking-tight text-white">Rs {displayTotal.toFixed(2)}</p>
+            </div>
+            <div className="p-5 lg:p-6">
+              <p className="text-white text-xs font-semibold uppercase tracking-widest mb-2">Monthly Budget</p>
+              {hasBudget ? (
+                <>
+                  {monthlyTotal > profile.monthly_budget ? (
+                    <p className="text-sm lg:text-base font-semibold text-white">
+                      Over by Rs {Math.round(monthlyTotal - profile.monthly_budget).toLocaleString()}
+                    </p>
+                  ) : (
+                    <p className="text-sm lg:text-base font-semibold text-emerald-300">
+                      ✓ Rs {Math.round(profile.monthly_budget - monthlyTotal).toLocaleString()} remaining
+                    </p>
+                  )}
+                  <p className="text-xs text-white mt-1">
+                    Rs {Math.round(monthlyTotal).toLocaleString()} / Rs {Math.round(profile.monthly_budget).toLocaleString()}
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-white mt-1">No budget set</p>
+              )}
             </div>
           </div>
-        )}
-
-        {/* Add Expense Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-emerald-100 dark:border-gray-700 p-6 transition-colors duration-300">
-          <h2 className="text-lg font-semibold text-emerald-800 dark:text-emerald-300 mb-4">Add Expense</h2>
-          <form onSubmit={handleAddExpense} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-emerald-700 dark:text-emerald-400 mb-1">Amount</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-                className="w-full border border-emerald-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-emerald-700 dark:text-emerald-400 mb-1">Category</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                required
-                className="w-full border border-emerald-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
-              >
-                <option value="">Select a category</option>
-                <option>Food</option>
-                <option>Transport</option>
-                <option>Shopping</option>
-                <option>Entertainment</option>
-                <option>Health</option>
-                <option>Bills</option>
-                <option>Other</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-emerald-700 dark:text-emerald-400 mb-1">
-                Note <span className="text-emerald-400 font-normal">(optional)</span>
-              </label>
-              <input
-                type="text"
-                placeholder="What was this for?"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                className="w-full border border-emerald-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
-              />
-            </div>
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={isRecurring}
-                onChange={(e) => setIsRecurring(e.target.checked)}
-                className="w-4 h-4 accent-emerald-600 cursor-pointer"
-              />
-              <span className="text-sm text-gray-600 dark:text-gray-400">Recurring monthly</span>
-            </label>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 active:scale-[0.98]"
-            >
-              {loading ? 'Adding...' : 'Add Expense'}
-            </button>
-          </form>
         </div>
 
-        {/* All Expenses */}
-        <div>
-          <h2 className="text-sm font-semibold text-emerald-500 dark:text-emerald-400 uppercase tracking-widest mb-3">
-            All Expenses
-          </h2>
-          {fetching ? (
-            <div className="space-y-3">
-              <SkeletonRow />
-              <SkeletonRow />
-              <SkeletonRow />
-            </div>
-          ) : expenses.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-emerald-100 dark:border-gray-700 shadow-sm p-10 flex flex-col items-center text-center">
-              <div className="text-4xl mb-3">💸</div>
-              <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">No expenses yet</p>
-              <p className="text-sm text-gray-400 dark:text-gray-500">Add your first expense above to get started.</p>
-            </div>
-          ) : (
-            <ul className="space-y-3">
-              {expenses.map((expense, index) => {
-                const colors = CATEGORY_COLORS[expense.category] || CATEGORY_COLORS.Other
-                const date = new Date(expense.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-                const isNew = newIds.has(expense.id)
-                const shouldAnimate = isNew || !listLoaded
-                return (
-                  <li
-                    key={expense.id}
-                    className={`bg-white dark:bg-gray-800 rounded-xl border border-emerald-100 dark:border-gray-700 shadow-sm px-5 py-4 flex justify-between items-center hover:shadow-md hover:scale-[1.005] transition-all duration-200 ${shouldAnimate ? 'animate-slideUp' : ''}`}
-                    style={!listLoaded && !isNew ? { animationDelay: `${index * 60}ms`, opacity: 0, animationFillMode: 'forwards' } : {}}
+        {/* MOBILE: Add Expense button */}
+        <button
+          onClick={() => setSheetOpen(true)}
+          className="lg:hidden w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition-all duration-200 active:scale-[0.98]"
+        >
+          + Add Expense
+        </button>
+
+        {/* MOBILE: Tabs */}
+        <div className="lg:hidden flex border-b border-gray-200 dark:border-gray-700">
+          <button
+            onClick={() => setActiveTab('expenses')}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors
+              ${activeTab === 'expenses'
+                ? 'text-emerald-600 border-b-2 border-emerald-600'
+                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+          >
+            Expenses
+          </button>
+          <button
+            onClick={() => setActiveTab('stats')}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors
+              ${activeTab === 'stats'
+                ? 'text-emerald-600 border-b-2 border-emerald-600'
+                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+          >
+            Stats
+          </button>
+        </div>
+
+        {/* TWO-COLUMN GRID */}
+        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
+
+          {/* LEFT: Add Expense Form — desktop only */}
+          <div className="hidden lg:block">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-emerald-100 dark:border-gray-700 p-6 transition-colors duration-300">
+              <h2 className="text-lg font-semibold text-emerald-800 dark:text-emerald-300 mb-3">Add Expense</h2>
+              <form onSubmit={handleAddExpense} className="space-y-2">
+                <div>
+                  <label className="block text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">Amount</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    required
+                    className="w-full border border-emerald-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">Category</label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    required
+                    className="w-full border border-emerald-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="w-3.5 h-3.5 rounded-full flex-shrink-0" style={{ backgroundColor: colors.bar }} />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-gray-800 dark:text-gray-100">{expense.category}</p>
-                          {expense.is_recurring && (
-                            <span className="text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded-full">↻ recurring</span>
-                          )}
+                    <option value="">Select a category</option>
+                    <option>Food</option>
+                    <option>Transport</option>
+                    <option>Shopping</option>
+                    <option>Entertainment</option>
+                    <option>Health</option>
+                    <option>Bills</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">
+                    Note <span className="text-emerald-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="What was this for?"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    className="w-full border border-emerald-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
+                  />
+                </div>
+                <div className="flex items-center gap-3 pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer select-none flex-1">
+                    <input
+                      type="checkbox"
+                      checked={isRecurring}
+                      onChange={(e) => setIsRecurring(e.target.checked)}
+                      className="w-4 h-4 accent-emerald-600 cursor-pointer"
+                    />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Recurring monthly</span>
+                  </label>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-5 rounded-lg transition-all duration-200 disabled:opacity-50 active:scale-[0.98] whitespace-nowrap"
+                  >
+                    {loading ? 'Adding...' : 'Add Expense'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          {/* RIGHT: Stats + Expense List */}
+          <div className="flex flex-col gap-3">
+
+            {/* Category Breakdown — desktop: always | mobile: Stats tab */}
+            {sortedCategories.length > 0 && (
+              <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-emerald-100 dark:border-gray-700 p-4 transition-colors duration-300 ${activeTab === 'stats' ? 'block' : 'hidden'} lg:block`}>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-xs font-semibold text-emerald-500 dark:text-emerald-400 uppercase tracking-widest">
+                    Spending by Category
+                  </h2>
+                  {sortedCategories.length > 3 && (
+                    <button
+                      onClick={() => setShowAllCategories(v => !v)}
+                      className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
+                    >
+                      {showAllCategories ? 'show less' : `+${sortedCategories.length - 3} more`}
+                    </button>
+                  )}
+                </div>
+                <div>
+                  {(showAllCategories ? sortedCategories : sortedCategories.slice(0, 3)).map(([cat, total]) => {
+                    const colors = CATEGORY_COLORS[cat] || CATEGORY_COLORS.Other
+                    const rawPct = (total / weeklyTotal) * 100
+                    const pct = rawPct > 0 && rawPct < 1 ? '<1' : Math.round(rawPct)
+                    return (
+                      <div key={cat} className="py-1.5">
+                        <div className="flex justify-between items-center mb-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: colors.bar }} />
+                            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{cat}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs text-gray-400 dark:text-gray-500">{pct}%</span>
+                            <span className="text-xs font-semibold text-gray-800 dark:text-gray-100">Rs {Math.round(total).toLocaleString()}</span>
+                          </div>
                         </div>
-                        {expense.note && <p className="text-sm text-gray-400 dark:text-gray-500">{expense.note}</p>}
+                        <div className="w-full h-1 rounded-full overflow-hidden" style={{ backgroundColor: colors.light }}>
+                          <div
+                            className="h-1 rounded-full"
+                            style={{
+                              width: barsAnimated ? `${rawPct}%` : '0%',
+                              backgroundColor: colors.bar,
+                              transition: 'width 0.6s ease-out',
+                            }}
+                          />
+                        </div>
                       </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Expense List — desktop: always | mobile: Expenses tab */}
+            <div className={`${activeTab === 'expenses' ? 'block' : 'hidden'} lg:block`}>
+              <h2 className="text-sm font-semibold text-emerald-500 dark:text-emerald-400 uppercase tracking-widest mb-3">
+                All Expenses
+              </h2>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-emerald-100 dark:border-gray-700 overflow-hidden">
+                <div className="expense-scroll overflow-y-auto max-h-[400px]">
+                  {fetching ? (
+                    <>
+                      <SkeletonRow />
+                      <SkeletonRow />
+                      <SkeletonRow />
+                      <SkeletonRow />
+                      <SkeletonRow />
+                    </>
+                  ) : expenses.length === 0 ? (
+                    <div className="p-10 flex flex-col items-center text-center">
+                      <div className="text-4xl mb-3">💸</div>
+                      <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">No expenses yet</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-500">Add your first expense above to get started.</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-gray-400 dark:text-gray-500">{date}</span>
-                      <span className="font-semibold text-gray-800 dark:text-gray-100">
-                        Rs {parseFloat(expense.amount).toFixed(2)}
-                      </span>
-                      <button
-                        onClick={() => handleDelete(expense.id)}
-                        disabled={deletingId === expense.id}
-                        className="w-7 h-7 rounded-md flex items-center justify-center text-gray-300 dark:text-gray-600 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-150 disabled:opacity-40 text-base"
-                        title="Delete"
-                      >
-                        {deletingId === expense.id ? '·' : '×'}
-                      </button>
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
+                  ) : (
+                    <ul>
+                      {expenses.map((expense, index) => {
+                        const colors = CATEGORY_COLORS[expense.category] || CATEGORY_COLORS.Other
+                        const date = new Date(expense.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                        const isNew = newIds.has(expense.id)
+                        const shouldAnimate = isNew || !listLoaded
+                        return (
+                          <li
+                            key={expense.id}
+                            className={`py-2 px-3 flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150 ${shouldAnimate ? 'animate-slideUp' : ''}`}
+                            style={!listLoaded && !isNew ? { animationDelay: `${index * 60}ms`, opacity: 0, animationFillMode: 'forwards' } : {}}
+                          >
+                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: colors.bar }} />
+                            <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                              <span className="text-sm font-semibold text-gray-900 dark:text-white flex-shrink-0">{expense.category}</span>
+                              {expense.is_recurring && (
+                                <span className="text-[9px] font-semibold bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-1 py-0.5 rounded-full flex-shrink-0">↻</span>
+                              )}
+                              {expense.note && (
+                                <span className="text-xs text-gray-400 dark:text-gray-500 truncate">· {expense.note}</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <span className="text-xs text-gray-400 dark:text-gray-500">{date}</span>
+                              <span className="text-sm font-bold text-gray-900 dark:text-white">Rs {parseFloat(expense.amount).toFixed(2)}</span>
+                              <button
+                                onClick={() => openEditSheet(expense)}
+                                className="w-6 h-6 rounded flex items-center justify-center text-gray-300 dark:text-gray-600 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-150"
+                                title="Edit"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => handleDelete(expense.id)}
+                                disabled={deletingId === expense.id}
+                                className="w-6 h-6 rounded flex items-center justify-center text-gray-300 dark:text-gray-600 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-150 disabled:opacity-40 text-base leading-none"
+                                title="Delete"
+                              >
+                                {deletingId === expense.id ? '·' : '×'}
+                              </button>
+                            </div>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* MOBILE BOTTOM SHEET — backdrop */}
+        {sheetOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+            onClick={() => setSheetOpen(false)}
+          />
+        )}
+
+        {/* EDIT BOTTOM SHEET — backdrop */}
+        {editSheetOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+            onClick={() => setEditSheetOpen(false)}
+          />
+        )}
+
+        {/* EDIT BOTTOM SHEET — panel */}
+        <div className={`fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl transition-transform duration-300 ${editSheetOpen ? 'translate-y-0' : 'translate-y-full'}`}>
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-emerald-800 dark:text-emerald-300">Edit Expense</h2>
+              <button
+                onClick={() => setEditSheetOpen(false)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleEditExpense} className="space-y-2">
+              <div>
+                <label className="block text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">Amount</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={editAmount}
+                  onChange={(e) => setEditAmount(e.target.value)}
+                  required
+                  className="w-full border border-emerald-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">Category</label>
+                <select
+                  value={editCategory}
+                  onChange={(e) => setEditCategory(e.target.value)}
+                  required
+                  className="w-full border border-emerald-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
+                >
+                  <option value="">Select a category</option>
+                  <option>Food</option>
+                  <option>Transport</option>
+                  <option>Shopping</option>
+                  <option>Entertainment</option>
+                  <option>Health</option>
+                  <option>Bills</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">
+                  Note <span className="text-emerald-400 font-normal">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="What was this for?"
+                  value={editNote}
+                  onChange={(e) => setEditNote(e.target.value)}
+                  className="w-full border border-emerald-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
+                />
+              </div>
+              <div className="flex items-center gap-3 pt-1">
+                <label className="flex items-center gap-2 cursor-pointer select-none flex-1">
+                  <input
+                    type="checkbox"
+                    checked={editRecurring}
+                    onChange={(e) => setEditRecurring(e.target.checked)}
+                    className="w-4 h-4 accent-emerald-600 cursor-pointer"
+                  />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Recurring monthly</span>
+                </label>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-5 rounded-lg transition-all duration-200 disabled:opacity-50 active:scale-[0.98] whitespace-nowrap"
+                >
+                  {editLoading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        {/* MOBILE ADD BOTTOM SHEET — panel */}
+        <div className={`fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl transition-transform duration-300 lg:hidden ${sheetOpen ? 'translate-y-0' : 'translate-y-full'}`}>
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-emerald-800 dark:text-emerald-300">Add Expense</h2>
+              <button
+                onClick={() => setSheetOpen(false)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={async (e) => { await handleAddExpense(e); setSheetOpen(false) }} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-emerald-700 dark:text-emerald-400 mb-1">Amount</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  required
+                  className="w-full border border-emerald-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-emerald-700 dark:text-emerald-400 mb-1">Category</label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  required
+                  className="w-full border border-emerald-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
+                >
+                  <option value="">Select a category</option>
+                  <option>Food</option>
+                  <option>Transport</option>
+                  <option>Shopping</option>
+                  <option>Entertainment</option>
+                  <option>Health</option>
+                  <option>Bills</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-emerald-700 dark:text-emerald-400 mb-1">
+                  Note <span className="text-emerald-400 font-normal">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="What was this for?"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  className="w-full border border-emerald-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
+                />
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={isRecurring}
+                  onChange={(e) => setIsRecurring(e.target.checked)}
+                  className="w-4 h-4 accent-emerald-600 cursor-pointer"
+                />
+                <span className="text-sm text-gray-600 dark:text-gray-400">Recurring monthly</span>
+              </label>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 active:scale-[0.98]"
+              >
+                {loading ? 'Adding...' : 'Add Expense'}
+              </button>
+            </form>
+          </div>
         </div>
 
       </main>
@@ -503,6 +787,8 @@ function Dashboard() {
         total={weeklyTotal}
         transactionCount={weeklyExpenses.length}
         categoryTotals={sortedCategories.map(([cat, amt]) => ({ category: cat, amount: amt.toFixed(2) }))}
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
       />
     </div>
   )

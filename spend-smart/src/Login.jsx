@@ -63,6 +63,11 @@ function Login() {
           <a href="/signup" className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">Sign up</a>
         </p>
         {message && <p className="mt-2 text-sm text-center text-red-500">{message}</p>}
+        <p className="mt-4 text-center">
+          <a href="/wall" className="text-xs text-emerald-500 dark:text-emerald-400 hover:underline">
+            See what users say ❤️
+          </a>
+        </p>
       </div>
     </div>
   )

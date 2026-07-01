@@ -167,7 +167,7 @@ function Sidebar({ isOpen, onClose, user, profile, dark, setDark, onLogout, onFe
             }`}
           >
             <IconHeart />
-            Reviews
+            Wall of Love
           </Link>
           <button
             onClick={() => setDark(d => !d)}

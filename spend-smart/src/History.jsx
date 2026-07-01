@@ -6,7 +6,6 @@ import { useDarkMode } from './useDarkMode'
 import { useAuth } from './useAuth'
 import Sidebar from './Sidebar'
 import Logo from './Logo'
-import FlyingDollars from './FlyingDollars'
 import FeedbackModal from './FeedbackModal'
 
 const CATEGORY_COLORS = {
@@ -78,6 +77,7 @@ function History() {
   const [barsAnimated, setBarsAnimated] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [aiOpen, setAiOpen] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -141,7 +141,6 @@ function History() {
 
   return (
     <div className="min-h-screen bg-emerald-50 dark:bg-gray-900 transition-colors duration-300">
-      <FlyingDollars />
       <FeedbackModal
         isOpen={feedbackOpen}
         onClose={() => setFeedbackOpen(false)}
@@ -172,6 +171,13 @@ function History() {
           <Logo size={26} />
           <h1 className="text-lg font-semibold tracking-tight">SpendSmart</h1>
         </div>
+        <button
+          onClick={() => setAiOpen(o => !o)}
+          className="w-8 h-8 rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-800 flex items-center justify-center transition-colors text-base"
+          title="AI Assistant"
+        >
+          ✨
+        </button>
         <button
           onClick={() => setDark(d => !d)}
           className="w-8 h-8 rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-800 flex items-center justify-center transition-colors"
@@ -336,6 +342,8 @@ function History() {
         total={total}
         transactionCount={filteredExpenses.length}
         categoryTotals={sortedCategories.map(([cat, amt]) => ({ category: cat, amount: amt.toFixed(2) }))}
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
       />
     </div>
   )
