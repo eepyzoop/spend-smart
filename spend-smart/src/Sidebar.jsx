@@ -71,6 +71,13 @@ function IconStar() {
     </svg>
   )
 }
+function IconHeart() {
+  return (
+    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+    </svg>
+  )
+}
 
 const NAV_ICONS = {
   '/dashboard': <IconGrid />,
@@ -150,6 +157,18 @@ function Sidebar({ isOpen, onClose, user, profile, dark, setDark, onLogout, onFe
 
         {/* Footer */}
         <div className="px-3 py-4 border-t border-gray-100 dark:border-gray-800 space-y-0.5">
+          <Link
+            to="/wall"
+            onClick={onClose}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+              location.pathname === '/wall'
+                ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
+            }`}
+          >
+            <IconHeart />
+            Reviews
+          </Link>
           <button
             onClick={() => { onClose(); onFeedback?.() }}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-all duration-150"
