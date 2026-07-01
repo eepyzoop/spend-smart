@@ -2,24 +2,23 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 
-// Reliable session restoration using onAuthStateChange, which fires on:
-// - initial page load (INITIAL_SESSION)
-// - token refresh (TOKEN_REFRESHED)
-// - sign out (SIGNED_OUT)
-// Unlike getSession(), this handles expired-but-refreshable tokens correctly.
 export function useAuth() {
   const [user, setUser] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        setUser(session.user)
-      } else {
-        setUser(null)
-        navigate('/login')
-      }
+    // Restore existing session on mount — catches stored sessions after browser close
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      if (!session) navigate('/login')
     })
+
+    // Listen for future auth changes (sign in, sign out, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null)
+      if (event === 'SIGNED_OUT') navigate('/login')
+    })
+
     return () => subscription.unsubscribe()
   }, [navigate])
 
