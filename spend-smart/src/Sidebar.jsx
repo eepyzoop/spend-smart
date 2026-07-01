@@ -1,11 +1,75 @@
 import { Link, useLocation } from 'react-router-dom'
 
 const NAV_LINKS = [
-  { to: '/dashboard', label: 'Dashboard', icon: '🏠' },
-  { to: '/history',   label: 'History',   icon: '📋' },
-  { to: '/profile',  label: 'Profile',   icon: '👤' },
-  { to: '/settings',  label: 'Budget',    icon: '💰' },
+  { to: '/dashboard', label: 'Dashboard' },
+  { to: '/history',   label: 'History'   },
+  { to: '/profile',   label: 'Profile'   },
+  { to: '/settings',  label: 'Budget'    },
 ]
+
+function IconGrid() {
+  return (
+    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+    </svg>
+  )
+}
+function IconClock() {
+  return (
+    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/>
+    </svg>
+  )
+}
+function IconUser() {
+  return (
+    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+    </svg>
+  )
+}
+function IconChart() {
+  return (
+    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+      <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+    </svg>
+  )
+}
+function IconSun() {
+  return (
+    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  )
+}
+function IconMoon() {
+  return (
+    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  )
+}
+function IconLogout() {
+  return (
+    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+      <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+    </svg>
+  )
+}
+
+const NAV_ICONS = {
+  '/dashboard': <IconGrid />,
+  '/history':   <IconClock />,
+  '/profile':   <IconUser />,
+  '/settings':  <IconChart />,
+}
 
 function Sidebar({ isOpen, onClose, user, profile, dark, setDark, onLogout }) {
   const location = useLocation()
@@ -58,7 +122,7 @@ function Sidebar({ isOpen, onClose, user, profile, dark, setDark, onLogout }) {
 
         {/* Nav links */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          {NAV_LINKS.map(({ to, label, icon }) => {
+          {NAV_LINKS.map(({ to, label }) => {
             const active = location.pathname === to
             return (
               <Link
@@ -71,7 +135,7 @@ function Sidebar({ isOpen, onClose, user, profile, dark, setDark, onLogout }) {
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
                 }`}
               >
-                <span className="w-5 text-center text-base">{icon}</span>
+                {NAV_ICONS[to]}
                 {label}
               </Link>
             )
@@ -84,14 +148,14 @@ function Sidebar({ isOpen, onClose, user, profile, dark, setDark, onLogout }) {
             onClick={() => setDark(d => !d)}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-all duration-150"
           >
-            <span className="w-5 text-center">{dark ? '☀️' : '🌙'}</span>
+            {dark ? <IconSun /> : <IconMoon />}
             {dark ? 'Light mode' : 'Dark mode'}
           </button>
           <button
             onClick={() => { onClose(); onLogout() }}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-150"
           >
-            <span className="w-5 text-center">↪</span>
+            <IconLogout />
             Log out
           </button>
         </div>
