@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
 
 export function useDarkMode() {
-  const [dark, setDark] = useState(() => {
-    const saved = localStorage.getItem('theme') === 'dark'
-    if (saved) document.documentElement.classList.add('dark')
-    return saved
-  })
+  const [dark, setDark] = useState(
+    () => localStorage.getItem('theme') === 'dark'
+  )
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
