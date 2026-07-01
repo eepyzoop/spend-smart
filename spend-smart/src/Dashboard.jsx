@@ -218,10 +218,10 @@ function Dashboard() {
 
   const weekStart = getStartOfWeek()
   const weeklyExpenses = expenses.filter(e => new Date(e.created_at) >= weekStart)
-  const weeklyTotal = weeklyExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0)
+  const weeklyTotal = weeklyExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
 
   const categoryTotals = weeklyExpenses.reduce((acc, e) => {
-    acc[e.category] = (acc[e.category] || 0) + parseFloat(e.amount)
+    acc[e.category] = (acc[e.category] || 0) + (parseFloat(e.amount) || 0)
     return acc
   }, {})
   const sortedCategories = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])
@@ -229,9 +229,9 @@ function Dashboard() {
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
   const monthlyExpenses = expenses.filter(e => new Date(e.created_at) >= startOfMonth)
-  const monthlyTotal = monthlyExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0)
+  const monthlyTotal = monthlyExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
   const monthlyCategoryTotals = monthlyExpenses.reduce((acc, e) => {
-    acc[e.category] = (acc[e.category] || 0) + parseFloat(e.amount)
+    acc[e.category] = (acc[e.category] || 0) + (parseFloat(e.amount) || 0)
     return acc
   }, {})
 

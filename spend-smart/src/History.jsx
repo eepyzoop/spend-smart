@@ -99,7 +99,8 @@ function History() {
       .gte('created_at', start)
       .lt('created_at', end)
       .order('created_at', { ascending: false })
-    if (!error) setExpenses(data)
+    if (!error) setExpenses(data || [])
+    else setExpenses([])
     setFetching(false)
     setTimeout(() => setBarsAnimated(true), 100)
   }
@@ -129,9 +130,9 @@ function History() {
     })
   }, [expenses, search, filterCategory])
 
-  const total = filteredExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0)
+  const total = filteredExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
   const categoryTotals = filteredExpenses.reduce((acc, e) => {
-    acc[e.category] = (acc[e.category] || 0) + parseFloat(e.amount)
+    acc[e.category] = (acc[e.category] || 0) + (parseFloat(e.amount) || 0)
     return acc
   }, {})
   const sortedCategories = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])

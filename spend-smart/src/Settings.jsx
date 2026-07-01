@@ -59,7 +59,7 @@ function Settings() {
     setSaving(true)
     setSaved(false)
 
-    await supabase.from('profiles').upsert({
+    const { error: profileError } = await supabase.from('profiles').upsert({
       id: user.id,
       monthly_budget: monthlyBudget === '' ? null : parseFloat(monthlyBudget),
       updated_at: new Date().toISOString(),
@@ -74,12 +74,18 @@ function Settings() {
         updated_at: new Date().toISOString(),
       }))
 
+    let catError = null
     if (rows.length > 0) {
-      await supabase.from('category_budgets').upsert(rows, { onConflict: 'user_id,category' })
+      const { error } = await supabase.from('category_budgets').upsert(rows, { onConflict: 'user_id,category' })
+      catError = error
     }
 
     setSaving(false)
-    setSaved(true)
+    if (!profileError && !catError) {
+      setSaved(true)
+    } else {
+      setSaved('error')
+    }
   }
 
   if (!user || fetching) return null
@@ -142,7 +148,7 @@ function Settings() {
                 min="0"
                 placeholder="0.00"
                 value={monthlyBudget}
-                onChange={(e) => setMonthlyBudget(e.target.value)}
+                onChange={(e) => { setMonthlyBudget(e.target.value); setSaved(false) }}
                 className="w-full border border-emerald-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
               />
             </div>
@@ -160,7 +166,7 @@ function Settings() {
                     min="0"
                     placeholder="No limit"
                     value={categoryBudgets[cat] ?? ''}
-                    onChange={(e) => handleCategoryChange(cat, e.target.value)}
+                    onChange={(e) => { handleCategoryChange(cat, e.target.value); setSaved(false) }}
                     className="flex-1 border border-emerald-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
                   />
                 </div>
@@ -173,7 +179,7 @@ function Settings() {
             disabled={saving}
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 active:scale-[0.98]"
           >
-            {saving ? 'Saving...' : saved ? 'Saved ✓' : 'Save Settings'}
+            {saving ? 'Saving...' : saved === true ? 'Saved ✓' : saved === 'error' ? 'Save failed — try again' : 'Save Settings'}
           </button>
         </form>
       </main>
