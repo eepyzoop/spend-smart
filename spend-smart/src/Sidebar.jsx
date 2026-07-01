@@ -64,6 +64,13 @@ function IconLogout() {
     </svg>
   )
 }
+function IconStar() {
+  return (
+    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </svg>
+  )
+}
 
 const NAV_ICONS = {
   '/dashboard': <IconGrid />,
@@ -72,7 +79,7 @@ const NAV_ICONS = {
   '/settings':  <IconChart />,
 }
 
-function Sidebar({ isOpen, onClose, user, profile, dark, setDark, onLogout }) {
+function Sidebar({ isOpen, onClose, user, profile, dark, setDark, onLogout, onFeedback }) {
   const location = useLocation()
   const initial = ((profile?.display_name || user?.email || '?')[0]).toUpperCase()
 
@@ -143,6 +150,13 @@ function Sidebar({ isOpen, onClose, user, profile, dark, setDark, onLogout }) {
 
         {/* Footer */}
         <div className="px-3 py-4 border-t border-gray-100 dark:border-gray-800 space-y-0.5">
+          <button
+            onClick={() => { onClose(); onFeedback?.() }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-all duration-150"
+          >
+            <IconStar />
+            Rate SpendSmart
+          </button>
           <button
             onClick={() => setDark(d => !d)}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-all duration-150"

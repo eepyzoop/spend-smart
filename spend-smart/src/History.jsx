@@ -6,6 +6,7 @@ import { useDarkMode } from './useDarkMode'
 import Sidebar from './Sidebar'
 import Logo from './Logo'
 import FlyingDollars from './FlyingDollars'
+import FeedbackModal from './FeedbackModal'
 
 const CATEGORY_COLORS = {
   Food:          { bar: '#10b981', light: '#d1fae5' },
@@ -75,6 +76,7 @@ function History() {
   const [filterCategory, setFilterCategory] = useState('')
   const [barsAnimated, setBarsAnimated] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -144,6 +146,12 @@ function History() {
   return (
     <div className="min-h-screen bg-emerald-50 dark:bg-gray-900 transition-colors duration-300">
       <FlyingDollars />
+      <FeedbackModal
+        isOpen={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        user={user}
+        profile={profile}
+      />
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -152,6 +160,7 @@ function History() {
         dark={dark}
         setDark={setDark}
         onLogout={handleLogout}
+        onFeedback={() => setFeedbackOpen(true)}
       />
       <nav className="bg-emerald-700 dark:bg-emerald-900 text-white px-4 py-4 flex items-center gap-3 shadow-md">
         <button
