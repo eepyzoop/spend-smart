@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import AiAssistant from './AiAssistant'
 import { useDarkMode } from './useDarkMode'
+import { useAuth } from './useAuth'
 import Sidebar from './Sidebar'
 import Logo from './Logo'
 import FlyingDollars from './FlyingDollars'
@@ -106,7 +107,7 @@ function BudgetBar({ label, spent, limit, color }) {
 
 function Dashboard() {
   const [dark, setDark] = useDarkMode()
-  const [user, setUser] = useState(null)
+  const user = useAuth()
   const [expenses, setExpenses] = useState([])
   const [profile, setProfile] = useState(null)
   const [catBudgets, setCatBudgets] = useState([])
@@ -125,15 +126,8 @@ function Dashboard() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate('/login')
-      } else {
-        setUser(session.user)
-        fetchAll(session.user.id)
-      }
-    })
-  }, [])
+    if (user) fetchAll(user.id)
+  }, [user?.id])
 
   async function fetchAll(userId) {
     setFetching(true)

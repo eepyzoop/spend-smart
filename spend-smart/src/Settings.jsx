@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import { useDarkMode } from './useDarkMode'
+import { useAuth } from './useAuth'
 import Sidebar from './Sidebar'
 import Logo from './Logo'
 import FlyingDollars from './FlyingDollars'
@@ -11,7 +12,7 @@ const CATEGORIES = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Health', 
 
 function Settings() {
   const [dark, setDark] = useDarkMode()
-  const [user, setUser] = useState(null)
+  const user = useAuth()
   const [profile, setProfile] = useState(null)
   const [monthlyBudget, setMonthlyBudget] = useState('')
   const [categoryBudgets, setCategoryBudgets] = useState({})
@@ -23,15 +24,8 @@ function Settings() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate('/login')
-      } else {
-        setUser(session.user)
-        loadSettings(session.user.id)
-      }
-    })
-  }, [])
+    if (user) loadSettings(user.id)
+  }, [user?.id])
 
   async function loadSettings(userId) {
     setFetching(true)

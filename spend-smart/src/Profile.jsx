@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import { useDarkMode } from './useDarkMode'
+import { useAuth } from './useAuth'
 import Sidebar from './Sidebar'
 import Logo from './Logo'
 import FlyingDollars from './FlyingDollars'
@@ -9,7 +10,7 @@ import FeedbackModal from './FeedbackModal'
 
 function Profile() {
   const [dark, setDark] = useDarkMode()
-  const [user, setUser] = useState(null)
+  const user = useAuth()
   const [displayName, setDisplayName] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -18,15 +19,8 @@ function Profile() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate('/login')
-      } else {
-        setUser(session.user)
-        loadProfile(session.user.id)
-      }
-    })
-  }, [])
+    if (user) loadProfile(user.id)
+  }, [user?.id])
 
   async function loadProfile(userId) {
     const { data } = await supabase.from('profiles').select('display_name').eq('id', userId).maybeSingle()

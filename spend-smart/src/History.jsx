@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import AiAssistant from './AiAssistant'
 import { useDarkMode } from './useDarkMode'
+import { useAuth } from './useAuth'
 import Sidebar from './Sidebar'
 import Logo from './Logo'
 import FlyingDollars from './FlyingDollars'
@@ -66,7 +67,7 @@ function exportToCSV(expenses, monthLabel) {
 
 function History() {
   const [dark, setDark] = useDarkMode()
-  const [user, setUser] = useState(null)
+  const user = useAuth()
   const [profile, setProfile] = useState(null)
   const [expenses, setExpenses] = useState([])
   const [fetching, setFetching] = useState(true)
@@ -80,17 +81,11 @@ function History() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate('/login')
-      } else {
-        setUser(session.user)
-        fetchExpenses(session.user.id, getMonthOptions()[0])
-        supabase.from('profiles').select('display_name').eq('id', session.user.id).maybeSingle()
-          .then(({ data }) => { if (data) setProfile(data) })
-      }
-    })
-  }, [])
+    if (!user) return
+    fetchExpenses(user.id, getMonthOptions()[0])
+    supabase.from('profiles').select('display_name').eq('id', user.id).maybeSingle()
+      .then(({ data }) => { if (data) setProfile(data) })
+  }, [user?.id])
 
   async function fetchExpenses(userId, { year, month }) {
     setFetching(true)
