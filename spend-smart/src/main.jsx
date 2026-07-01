@@ -7,6 +7,7 @@ import Login from './Login.jsx'
 import Dashboard from './Dashboard.jsx'
 import History from './History.jsx'
 import Settings from './Settings.jsx'
+import Profile from './Profile.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -17,6 +18,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/history" element={<History />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/settings" element={<Settings />} />
       </Routes>
     </BrowserRouter>

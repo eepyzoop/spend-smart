@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import { useDarkMode } from './useDarkMode'
+import Sidebar from './Sidebar'
 
 const CATEGORIES = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Health', 'Bills', 'Other']
 
 function Settings() {
   const [dark, setDark] = useDarkMode()
   const [user, setUser] = useState(null)
-  const [displayName, setDisplayName] = useState('')
+  const [profile, setProfile] = useState(null)
   const [monthlyBudget, setMonthlyBudget] = useState('')
   const [categoryBudgets, setCategoryBudgets] = useState({})
   const [fetching, setFetching] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -29,13 +31,13 @@ function Settings() {
 
   async function loadSettings(userId) {
     setFetching(true)
-    const [{ data: profile }, { data: budgets }] = await Promise.all([
+    const [{ data: profileData }, { data: budgets }] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
       supabase.from('category_budgets').select('*').eq('user_id', userId),
     ])
-    if (profile) {
-      setDisplayName(profile.display_name || '')
-      setMonthlyBudget(profile.monthly_budget ?? '')
+    if (profileData) {
+      setProfile(profileData)
+      setMonthlyBudget(profileData.monthly_budget ?? '')
     }
     if (budgets) {
       const map = {}
@@ -43,6 +45,11 @@ function Settings() {
       setCategoryBudgets(map)
     }
     setFetching(false)
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    navigate('/login')
   }
 
   function handleCategoryChange(category, value) {
@@ -56,7 +63,6 @@ function Settings() {
 
     await supabase.from('profiles').upsert({
       id: user.id,
-      display_name: displayName || null,
       monthly_budget: monthlyBudget === '' ? null : parseFloat(monthlyBudget),
       updated_at: new Date().toISOString(),
     })
@@ -82,43 +88,39 @@ function Settings() {
 
   return (
     <div className="min-h-screen bg-emerald-50 dark:bg-gray-900 transition-colors duration-300">
-      <nav className="bg-emerald-700 dark:bg-emerald-900 text-white px-6 py-4 flex justify-between items-center shadow-md">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setDark(d => !d)}
-            className="w-8 h-8 rounded-full bg-emerald-600 dark:bg-emerald-800 hover:bg-emerald-500 flex items-center justify-center transition-all duration-200 active:scale-90 text-base"
-            title={dark ? 'Light mode' : 'Dark mode'}
-          >
-            {dark ? '☀️' : '🌙'}
-          </button>
-          <h1 className="text-xl font-bold tracking-wide">SpendSmart</h1>
-        </div>
-        <Link
-          to="/dashboard"
-          className="bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-500 px-4 py-1.5 rounded-lg text-sm transition-colors"
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        user={user}
+        profile={profile}
+        dark={dark}
+        setDark={setDark}
+        onLogout={handleLogout}
+      />
+      <nav className="bg-emerald-700 dark:bg-emerald-900 text-white px-4 py-4 flex items-center gap-3 shadow-md">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="w-8 h-8 rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-800 flex flex-col items-center justify-center gap-1 transition-colors"
+          aria-label="Open menu"
         >
-          ← Dashboard
-        </Link>
+          <span className="block w-4 h-0.5 bg-white rounded-full" />
+          <span className="block w-4 h-0.5 bg-white rounded-full" />
+          <span className="block w-4 h-0.5 bg-white rounded-full" />
+        </button>
+        <h1 className="flex-1 text-xl font-bold tracking-wide">SpendSmart</h1>
+        <button
+          onClick={() => setDark(d => !d)}
+          className="w-8 h-8 rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-800 flex items-center justify-center transition-colors"
+          title={dark ? 'Light mode' : 'Dark mode'}
+        >
+          {dark ? '☀️' : '🌙'}
+        </button>
       </nav>
 
       <main className="max-w-2xl mx-auto p-6 space-y-6">
-        <h2 className="text-xl font-bold text-emerald-900 dark:text-emerald-200">Settings</h2>
+        <h2 className="text-xl font-bold text-emerald-900 dark:text-emerald-200">Budget</h2>
 
         <form onSubmit={handleSave} className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-emerald-100 dark:border-gray-700 p-6 space-y-4 transition-colors duration-300">
-            <h3 className="text-sm font-semibold text-emerald-500 dark:text-emerald-400 uppercase tracking-widest">Profile</h3>
-            <div>
-              <label className="block text-sm font-medium text-emerald-700 dark:text-emerald-400 mb-1">Display Name</label>
-              <input
-                type="text"
-                placeholder="Your name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full border border-emerald-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
-              />
-            </div>
-          </div>
-
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-emerald-100 dark:border-gray-700 p-6 space-y-4 transition-colors duration-300">
             <h3 className="text-sm font-semibold text-emerald-500 dark:text-emerald-400 uppercase tracking-widest">Monthly Budget</h3>
             <div>

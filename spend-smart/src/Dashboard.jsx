@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import AiAssistant from './AiAssistant'
 import { useDarkMode } from './useDarkMode'
+import Sidebar from './Sidebar'
 
 function getStartOfWeek() {
   const now = new Date()
@@ -95,6 +96,7 @@ function Dashboard() {
   const [deletingId, setDeletingId] = useState(null)
   const [newIds, setNewIds] = useState(new Set())
   const [barsAnimated, setBarsAnimated] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -220,29 +222,39 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-emerald-50 dark:bg-gray-900 transition-colors duration-300">
-      <nav className="bg-emerald-700 dark:bg-emerald-900 text-white px-6 py-4 flex justify-between items-center shadow-md">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setDark(d => !d)}
-            className="w-8 h-8 rounded-full bg-emerald-600 dark:bg-emerald-800 hover:bg-emerald-500 flex items-center justify-center transition-all duration-200 active:scale-90 text-base"
-            title={dark ? 'Light mode' : 'Dark mode'}
-          >
-            {dark ? '☀️' : '🌙'}
-          </button>
-          <h1 className="text-xl font-bold tracking-wide">SpendSmart</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-emerald-200 dark:text-emerald-400 text-sm hidden sm:block">{user.email}</span>
-          <Link to="/history" className="bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-500 px-4 py-1.5 rounded-lg text-sm transition-colors">History</Link>
-          <Link to="/settings" className="bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-500 px-4 py-1.5 rounded-lg text-sm transition-colors">Settings</Link>
-          <button onClick={handleLogout} className="bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-500 px-4 py-1.5 rounded-lg text-sm transition-colors">Log Out</button>
-        </div>
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        user={user}
+        profile={profile}
+        dark={dark}
+        setDark={setDark}
+        onLogout={handleLogout}
+      />
+      <nav className="bg-emerald-700 dark:bg-emerald-900 text-white px-4 py-4 flex items-center gap-3 shadow-md">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="w-8 h-8 rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-800 flex flex-col items-center justify-center gap-1 transition-colors"
+          aria-label="Open menu"
+        >
+          <span className="block w-4 h-0.5 bg-white rounded-full" />
+          <span className="block w-4 h-0.5 bg-white rounded-full" />
+          <span className="block w-4 h-0.5 bg-white rounded-full" />
+        </button>
+        <h1 className="flex-1 text-xl font-bold tracking-wide">SpendSmart</h1>
+        <button
+          onClick={() => setDark(d => !d)}
+          className="w-8 h-8 rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-800 flex items-center justify-center transition-colors"
+          title={dark ? 'Light mode' : 'Dark mode'}
+        >
+          {dark ? '☀️' : '🌙'}
+        </button>
       </nav>
 
       <main className="max-w-2xl mx-auto p-6 space-y-6">
 
         {/* This Week */}
-        <div className="bg-emerald-700 dark:bg-emerald-900 text-white rounded-2xl shadow-md p-6 transition-colors duration-300">
+        <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 dark:from-emerald-800 dark:to-emerald-950 text-white rounded-2xl shadow-md p-6 transition-colors duration-300">
           <p className="text-emerald-300 text-sm font-medium mb-1">This Week</p>
           <p className="text-4xl font-bold">Rs {weeklyTotal.toFixed(2)}</p>
         </div>
@@ -395,13 +407,14 @@ function Dashboard() {
             <ul className="space-y-3">
               {expenses.map((expense) => {
                 const colors = CATEGORY_COLORS[expense.category] || CATEGORY_COLORS.Other
+                const date = new Date(expense.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
                 return (
                   <li
                     key={expense.id}
                     className={`bg-white dark:bg-gray-800 rounded-xl border border-emerald-100 dark:border-gray-700 shadow-sm px-5 py-4 flex justify-between items-center hover:shadow-md hover:scale-[1.005] transition-all duration-200 ${newIds.has(expense.id) ? 'animate-slideUp' : ''}`}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: colors.bar }} />
+                      <span className="w-3.5 h-3.5 rounded-full flex-shrink-0" style={{ backgroundColor: colors.bar }} />
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="font-medium text-gray-800 dark:text-gray-100">{expense.category}</p>
@@ -413,13 +426,14 @@ function Dashboard() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{date}</span>
                       <span className="font-semibold text-gray-800 dark:text-gray-100">
                         Rs {parseFloat(expense.amount).toFixed(2)}
                       </span>
                       <button
                         onClick={() => handleDelete(expense.id)}
                         disabled={deletingId === expense.id}
-                        className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors text-lg leading-none disabled:opacity-40"
+                        className="w-7 h-7 rounded-md flex items-center justify-center text-gray-300 dark:text-gray-600 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-150 disabled:opacity-40 text-base"
                         title="Delete"
                       >
                         {deletingId === expense.id ? '·' : '×'}

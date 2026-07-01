@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import AiAssistant from './AiAssistant'
 import { useDarkMode } from './useDarkMode'
+import Sidebar from './Sidebar'
 
 const CATEGORY_COLORS = {
   Food:          { bar: '#10b981', light: '#d1fae5' },
@@ -63,6 +64,7 @@ function exportToCSV(expenses, monthLabel) {
 function History() {
   const [dark, setDark] = useDarkMode()
   const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
   const [expenses, setExpenses] = useState([])
   const [fetching, setFetching] = useState(true)
   const [monthOptions] = useState(getMonthOptions)
@@ -70,6 +72,7 @@ function History() {
   const [search, setSearch] = useState('')
   const [filterCategory, setFilterCategory] = useState('')
   const [barsAnimated, setBarsAnimated] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -79,6 +82,8 @@ function History() {
       } else {
         setUser(session.user)
         fetchExpenses(session.user.id, getMonthOptions()[0])
+        supabase.from('profiles').select('display_name').eq('id', session.user.id).maybeSingle()
+          .then(({ data }) => { if (data) setProfile(data) })
       }
     })
   }, [])
@@ -98,6 +103,11 @@ function History() {
     if (!error) setExpenses(data)
     setFetching(false)
     setTimeout(() => setBarsAnimated(true), 100)
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    navigate('/login')
   }
 
   function handleMonthChange(e) {
@@ -131,21 +141,33 @@ function History() {
 
   return (
     <div className="min-h-screen bg-emerald-50 dark:bg-gray-900 transition-colors duration-300">
-      <nav className="bg-emerald-700 dark:bg-emerald-900 text-white px-6 py-4 flex justify-between items-center shadow-md">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setDark(d => !d)}
-            className="w-8 h-8 rounded-full bg-emerald-600 dark:bg-emerald-800 hover:bg-emerald-500 flex items-center justify-center transition-all duration-200 active:scale-90 text-base"
-            title={dark ? 'Light mode' : 'Dark mode'}
-          >
-            {dark ? '☀️' : '🌙'}
-          </button>
-          <h1 className="text-xl font-bold tracking-wide">SpendSmart</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link to="/settings" className="bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-500 px-4 py-1.5 rounded-lg text-sm transition-colors">Settings</Link>
-          <Link to="/dashboard" className="bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-500 px-4 py-1.5 rounded-lg text-sm transition-colors">← Dashboard</Link>
-        </div>
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        user={user}
+        profile={profile}
+        dark={dark}
+        setDark={setDark}
+        onLogout={handleLogout}
+      />
+      <nav className="bg-emerald-700 dark:bg-emerald-900 text-white px-4 py-4 flex items-center gap-3 shadow-md">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="w-8 h-8 rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-800 flex flex-col items-center justify-center gap-1 transition-colors"
+          aria-label="Open menu"
+        >
+          <span className="block w-4 h-0.5 bg-white rounded-full" />
+          <span className="block w-4 h-0.5 bg-white rounded-full" />
+          <span className="block w-4 h-0.5 bg-white rounded-full" />
+        </button>
+        <h1 className="flex-1 text-xl font-bold tracking-wide">SpendSmart</h1>
+        <button
+          onClick={() => setDark(d => !d)}
+          className="w-8 h-8 rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-800 flex items-center justify-center transition-colors"
+          title={dark ? 'Light mode' : 'Dark mode'}
+        >
+          {dark ? '☀️' : '🌙'}
+        </button>
       </nav>
 
       <main className="max-w-2xl mx-auto p-6 space-y-6">
@@ -175,7 +197,7 @@ function History() {
         </div>
 
         {/* Total card */}
-        <div className="bg-emerald-700 dark:bg-emerald-900 text-white rounded-2xl shadow-md p-6 transition-colors duration-300">
+        <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 dark:from-emerald-800 dark:to-emerald-950 text-white rounded-2xl shadow-md p-6 transition-colors duration-300">
           <p className="text-emerald-300 text-sm font-medium mb-1">{monthOptions[selectedIndex].label}</p>
           <p className="text-4xl font-bold">Rs {total.toFixed(2)}</p>
           <p className="text-emerald-300 text-sm mt-2">

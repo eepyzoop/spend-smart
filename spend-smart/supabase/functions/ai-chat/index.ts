@@ -28,7 +28,8 @@ Rules:
 - Reference their actual numbers when relevant
 - Currency is Pakistani Rupees (Rs)
 - Give actionable, practical advice
-- If they have no data, encourage them to add expenses first`
+- If they have no data, encourage them to add expenses first
+- Reply in plain conversational text — no markdown, no asterisks for bold, no bullet points, no headers`
 
   const geminiMessages = messages.map((m: { role: string; content: string }) => ({
     role: m.role === 'assistant' ? 'model' : 'user',

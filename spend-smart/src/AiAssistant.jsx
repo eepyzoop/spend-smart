@@ -55,14 +55,14 @@ function AiAssistant({ periodLabel, total, transactionCount, categoryTotals }) {
     <>
       <button
         onClick={() => setAiOpen(o => !o)}
-        className="fixed bottom-5 left-5 w-12 h-12 bg-emerald-700 hover:bg-emerald-600 dark:bg-emerald-800 dark:hover:bg-emerald-700 text-white rounded-full shadow-xl flex items-center justify-center text-xl transition-all duration-200 hover:scale-110 active:scale-95 z-50"
+        className="fixed bottom-5 right-5 w-12 h-12 bg-emerald-700 hover:bg-emerald-600 dark:bg-emerald-800 dark:hover:bg-emerald-700 text-white rounded-full shadow-xl flex items-center justify-center text-xl transition-all duration-200 hover:scale-110 active:scale-95 z-50"
         title="AI Assistant"
       >
         ✨
       </button>
 
       <div
-        className={`fixed bottom-20 left-5 w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-emerald-100 dark:border-gray-700 z-50 flex flex-col overflow-hidden transition-all duration-300 ease-out ${
+        className={`fixed bottom-20 right-5 w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-emerald-100 dark:border-gray-700 z-50 flex flex-col overflow-hidden transition-all duration-300 ease-out ${
           aiOpen
             ? 'opacity-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 translate-y-4 pointer-events-none'
