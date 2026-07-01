@@ -38,6 +38,8 @@ function getStartOfWeek() {
   return monday
 }
 
+const SHOW_INSIGHTS_THRESHOLD = 4
+
 const CATEGORY_COLORS = {
   Food:          { bar: '#10b981', light: '#d1fae5' },
   Transport:     { bar: '#06b6d4', light: '#cffafe' },
@@ -410,7 +412,7 @@ function Dashboard() {
         <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
 
           {/* LEFT: Add Expense Form — desktop only */}
-          <div className="hidden lg:block">
+          <div className="hidden lg:flex lg:flex-col lg:gap-4">
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-emerald-100 dark:border-gray-700 p-6 transition-colors duration-300">
               <h2 className="text-lg font-semibold text-emerald-800 dark:text-emerald-300 mb-3">Add Expense</h2>
               <form onSubmit={handleAddExpense} className="space-y-2">
@@ -477,6 +479,33 @@ function Dashboard() {
                 </div>
               </form>
             </div>
+
+            {/* This Week at a Glance — only shown when right column is tall enough to need filling */}
+            {weeklyExpenses.length > SHOW_INSIGHTS_THRESHOLD && (() => {
+              const dailyAvg = weeklyTotal / 7
+              const biggest = weeklyExpenses.reduce((max, e) => parseFloat(e.amount) > parseFloat(max.amount) ? e : max)
+              const biggestColors = CATEGORY_COLORS[biggest.category] || CATEGORY_COLORS.Other
+              const biggestDate = new Date(biggest.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+              return (
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-emerald-100 dark:border-gray-700 p-4 transition-colors duration-300">
+                  <div>
+                    <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide mb-1">Daily Average</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                      Rs {Math.round(dailyAvg).toLocaleString()} <span className="text-sm font-normal text-gray-400">/ day</span>
+                    </p>
+                  </div>
+                  <div className="border-t border-gray-100 dark:border-gray-700 mt-3 pt-3">
+                    <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide mb-1">Biggest Expense</p>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: biggestColors.bar }} />
+                      <span className="text-sm font-bold text-gray-900 dark:text-white">{biggest.category}</span>
+                      <span className="text-sm font-bold text-gray-900 dark:text-white ml-auto">Rs {parseFloat(biggest.amount).toFixed(2)}</span>
+                    </div>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 ml-4">{biggestDate}</p>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
 
           {/* RIGHT: Stats + Expense List */}
