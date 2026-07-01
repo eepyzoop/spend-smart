@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import Logo from './Logo'
 
 const NAV_LINKS = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -92,10 +93,8 @@ function Sidebar({ isOpen, onClose, user, profile, dark, setDark, onLogout }) {
         {/* Brand */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-emerald-600 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
-              <span className="text-white text-sm font-bold">S</span>
-            </div>
-            <span className="font-bold text-emerald-800 dark:text-emerald-300 tracking-tight">SpendSmart</span>
+            <Logo size={30} />
+            <span className="font-semibold text-emerald-800 dark:text-emerald-300 tracking-tight">SpendSmart</span>
           </div>
           <button
             onClick={onClose}

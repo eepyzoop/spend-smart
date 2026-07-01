@@ -4,6 +4,7 @@ import { supabase } from './supabaseClient'
 import AiAssistant from './AiAssistant'
 import { useDarkMode } from './useDarkMode'
 import Sidebar from './Sidebar'
+import Logo from './Logo'
 
 const CATEGORY_COLORS = {
   Food:          { bar: '#10b981', light: '#d1fae5' },
@@ -160,7 +161,10 @@ function History() {
           <span className="block w-4 h-0.5 bg-white rounded-full" />
           <span className="block w-4 h-0.5 bg-white rounded-full" />
         </button>
-        <h1 className="flex-1 text-xl font-bold tracking-wide">SpendSmart</h1>
+        <div className="flex items-center gap-2 flex-1">
+          <Logo size={26} />
+          <h1 className="text-lg font-semibold tracking-tight">SpendSmart</h1>
+        </div>
         <button
           onClick={() => setDark(d => !d)}
           className="w-8 h-8 rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-800 flex items-center justify-center transition-colors"
@@ -198,8 +202,8 @@ function History() {
 
         {/* Total card */}
         <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 dark:from-emerald-800 dark:to-emerald-950 text-white rounded-2xl shadow-md p-6 transition-colors duration-300">
-          <p className="text-emerald-300 text-sm font-medium mb-1">{monthOptions[selectedIndex].label}</p>
-          <p className="text-4xl font-bold">Rs {total.toFixed(2)}</p>
+          <p className="text-emerald-300 text-xs font-medium uppercase tracking-wider mb-2">{monthOptions[selectedIndex].label}</p>
+          <p className="text-4xl font-light tracking-tight">Rs {total.toFixed(2)}</p>
           <p className="text-emerald-300 text-sm mt-2">
             {filteredExpenses.length} transaction{filteredExpenses.length !== 1 ? 's' : ''}
           </p>

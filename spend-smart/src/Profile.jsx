@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import { useDarkMode } from './useDarkMode'
 import Sidebar from './Sidebar'
+import Logo from './Logo'
 
 function Profile() {
   const [dark, setDark] = useDarkMode()
@@ -71,7 +72,10 @@ function Profile() {
           <span className="block w-4 h-0.5 bg-white rounded-full" />
           <span className="block w-4 h-0.5 bg-white rounded-full" />
         </button>
-        <h1 className="flex-1 text-xl font-bold tracking-wide">SpendSmart</h1>
+        <div className="flex items-center gap-2 flex-1">
+          <Logo size={26} />
+          <h1 className="text-lg font-semibold tracking-tight">SpendSmart</h1>
+        </div>
         <button
           onClick={() => setDark(d => !d)}
           className="w-8 h-8 rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-800 flex items-center justify-center transition-colors"

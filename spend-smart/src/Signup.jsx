@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from './supabaseClient'
 import { useDarkMode } from './useDarkMode'
+import Logo from './Logo'
 
 function Signup() {
   useDarkMode()
@@ -22,10 +23,8 @@ function Signup() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
       <div className="bg-white dark:bg-gray-800 border border-emerald-100 dark:border-gray-700 p-8 rounded-2xl shadow-lg w-full max-w-sm transition-colors duration-300">
         <div className="flex items-center gap-2.5 mb-6">
-          <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
-            <span className="text-white text-sm font-bold">S</span>
-          </div>
-          <span className="text-lg font-bold text-emerald-800 dark:text-emerald-300 tracking-tight">SpendSmart</span>
+          <Logo size={34} />
+          <span className="text-lg font-semibold text-emerald-800 dark:text-emerald-300 tracking-tight">SpendSmart</span>
         </div>
         <h2 className="text-2xl font-bold mb-1 text-gray-800 dark:text-gray-100">Create account</h2>
         <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">Start tracking your spending</p>
