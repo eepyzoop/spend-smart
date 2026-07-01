@@ -1,19 +1,23 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import { useDarkMode } from './useDarkMode'
 import Logo from './Logo'
 
 function Signup() {
   useDarkMode()
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
 
   async function handleSignup(e) {
     e.preventDefault()
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) {
       setMessage(error.message)
+    } else if (data.session) {
+      navigate('/dashboard')
     } else {
       setMessage('Check your email to confirm your account!')
     }
