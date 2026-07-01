@@ -1,0 +1,316 @@
+import { useEffect, useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { supabase } from './supabaseClient'
+import AiAssistant from './AiAssistant'
+
+function getStartOfWeek() {
+  const now = new Date()
+  const day = now.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  const monday = new Date(now)
+  monday.setDate(now.getDate() + diff)
+  monday.setHours(0, 0, 0, 0)
+  return monday
+}
+
+const CATEGORY_COLORS = {
+  Food:          { bar: '#10b981', light: '#d1fae5' },
+  Transport:     { bar: '#06b6d4', light: '#cffafe' },
+  Shopping:      { bar: '#8b5cf6', light: '#ede9fe' },
+  Entertainment: { bar: '#f59e0b', light: '#fef3c7' },
+  Health:        { bar: '#ef4444', light: '#fee2e2' },
+  Bills:         { bar: '#f97316', light: '#ffedd5' },
+  Other:         { bar: '#6b7280', light: '#f3f4f6' },
+}
+
+function SkeletonRow() {
+  return (
+    <div className="bg-white rounded-xl border border-emerald-100 shadow-sm px-5 py-4 flex justify-between items-center animate-pulse">
+      <div className="flex items-center gap-3">
+        <div className="w-3 h-3 rounded-full bg-emerald-100" />
+        <div className="space-y-1.5">
+          <div className="h-3 w-24 bg-emerald-100 rounded" />
+          <div className="h-2.5 w-16 bg-emerald-50 rounded" />
+        </div>
+      </div>
+      <div className="h-3 w-16 bg-emerald-100 rounded" />
+    </div>
+  )
+}
+
+function Dashboard() {
+  const [user, setUser] = useState(null)
+  const [expenses, setExpenses] = useState([])
+  const [amount, setAmount] = useState('')
+  const [category, setCategory] = useState('')
+  const [note, setNote] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [fetching, setFetching] = useState(true)
+  const [deletingId, setDeletingId] = useState(null)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate('/login')
+      } else {
+        setUser(session.user)
+        fetchExpenses(session.user.id)
+      }
+    })
+  }, [])
+
+  async function fetchExpenses(userId) {
+    setFetching(true)
+    const { data, error } = await supabase
+      .from('expenses')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (!error) setExpenses(data)
+    setFetching(false)
+  }
+
+  async function handleAddExpense(e) {
+    e.preventDefault()
+    setLoading(true)
+
+    const { error } = await supabase.from('expenses').insert({
+      user_id: user.id,
+      amount: parseFloat(amount),
+      category,
+      note,
+    })
+
+    if (!error) {
+      setAmount('')
+      setCategory('')
+      setNote('')
+      fetchExpenses(user.id)
+    }
+
+    setLoading(false)
+  }
+
+  async function handleDelete(id) {
+    setDeletingId(id)
+    const { error } = await supabase.from('expenses').delete().eq('id', id)
+    if (!error) {
+      setExpenses(prev => prev.filter(e => e.id !== id))
+    }
+    setDeletingId(null)
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    navigate('/login')
+  }
+
+  const weekStart = getStartOfWeek()
+  const weeklyExpenses = expenses.filter(e => new Date(e.created_at) >= weekStart)
+  const weeklyTotal = weeklyExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0)
+
+  const categoryTotals = weeklyExpenses.reduce((acc, e) => {
+    acc[e.category] = (acc[e.category] || 0) + parseFloat(e.amount)
+    return acc
+  }, {})
+
+  const sortedCategories = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])
+
+  if (!user) return null
+
+  return (
+    <div className="min-h-screen bg-emerald-50">
+      <nav className="bg-emerald-700 text-white px-6 py-4 flex justify-between items-center shadow-md">
+        <h1 className="text-xl font-bold tracking-wide">SpendSmart</h1>
+        <div className="flex items-center gap-4">
+          <span className="text-emerald-200 text-sm">{user.email}</span>
+          <Link
+            to="/history"
+            className="bg-emerald-600 hover:bg-emerald-500 px-4 py-1.5 rounded-lg text-sm transition-colors"
+          >
+            History
+          </Link>
+          <Link
+            to="/settings"
+            className="bg-emerald-600 hover:bg-emerald-500 px-4 py-1.5 rounded-lg text-sm transition-colors"
+          >
+            Settings
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="bg-emerald-600 hover:bg-emerald-500 px-4 py-1.5 rounded-lg text-sm transition-colors"
+          >
+            Log Out
+          </button>
+        </div>
+      </nav>
+
+      <main className="max-w-2xl mx-auto p-6 space-y-6">
+
+        {/* This Week Summary */}
+        <div className="bg-emerald-700 text-white rounded-2xl shadow-md p-6">
+          <p className="text-emerald-300 text-sm font-medium mb-1">This Week</p>
+          <p className="text-4xl font-bold">Rs {weeklyTotal.toFixed(2)}</p>
+        </div>
+
+        {/* Category Breakdown */}
+        {sortedCategories.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-6">
+            <h2 className="text-sm font-semibold text-emerald-500 uppercase tracking-widest mb-5">
+              Spending by Category
+            </h2>
+            <div className="space-y-4">
+              {sortedCategories.map(([cat, total]) => {
+                const colors = CATEGORY_COLORS[cat] || CATEGORY_COLORS.Other
+                const rawPct = (total / weeklyTotal) * 100
+                const pct = rawPct > 0 && rawPct < 1 ? '<1' : Math.round(rawPct)
+                const barWidth = rawPct
+
+                return (
+                  <div key={cat}>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: colors.bar }} />
+                        <span className="text-sm font-medium text-gray-700">{cat}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400">{pct}%</span>
+                        <span className="text-sm font-semibold text-gray-800">Rs {total.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <div className="w-full h-3 rounded-full overflow-hidden" style={{ backgroundColor: colors.light }}>
+                      <div className="h-3 rounded-full" style={{ width: `${barWidth}%`, backgroundColor: colors.bar }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Add Expense Form */}
+        <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-6">
+          <h2 className="text-lg font-semibold text-emerald-800 mb-4">Add Expense</h2>
+          <form onSubmit={handleAddExpense} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-emerald-700 mb-1">Amount</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+                className="w-full border border-emerald-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-emerald-700 mb-1">Category</label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                required
+                className="w-full border border-emerald-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white"
+              >
+                <option value="">Select a category</option>
+                <option>Food</option>
+                <option>Transport</option>
+                <option>Shopping</option>
+                <option>Entertainment</option>
+                <option>Health</option>
+                <option>Bills</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-emerald-700 mb-1">
+                Note <span className="text-emerald-400 font-normal">(optional)</span>
+              </label>
+              <input
+                type="text"
+                placeholder="What was this for?"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className="w-full border border-emerald-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Adding...' : 'Add Expense'}
+            </button>
+          </form>
+        </div>
+
+        {/* All Expenses List */}
+        <div>
+          <h2 className="text-sm font-semibold text-emerald-500 uppercase tracking-widest mb-3">
+            All Expenses
+          </h2>
+
+          {fetching ? (
+            <div className="space-y-3">
+              <SkeletonRow />
+              <SkeletonRow />
+              <SkeletonRow />
+            </div>
+          ) : expenses.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-emerald-100 shadow-sm p-10 flex flex-col items-center text-center">
+              <div className="text-4xl mb-3">💸</div>
+              <p className="font-semibold text-gray-700 mb-1">No expenses yet</p>
+              <p className="text-sm text-gray-400">Add your first expense above to get started.</p>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {expenses.map((expense) => {
+                const colors = CATEGORY_COLORS[expense.category] || CATEGORY_COLORS.Other
+                return (
+                  <li
+                    key={expense.id}
+                    className="bg-white rounded-xl border border-emerald-100 shadow-sm px-5 py-4 flex justify-between items-center group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: colors.bar }} />
+                      <div>
+                        <p className="font-medium text-gray-800">{expense.category}</p>
+                        {expense.note && <p className="text-sm text-gray-400">{expense.note}</p>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-semibold text-gray-800">
+                        Rs {parseFloat(expense.amount).toFixed(2)}
+                      </span>
+                      <button
+                        onClick={() => handleDelete(expense.id)}
+                        disabled={deletingId === expense.id}
+                        className="text-gray-300 hover:text-red-400 transition-colors text-lg leading-none disabled:opacity-40"
+                        title="Delete"
+                      >
+                        {deletingId === expense.id ? '·' : '×'}
+                      </button>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+
+      </main>
+
+      <AiAssistant
+        periodLabel="This Week"
+        total={weeklyTotal}
+        transactionCount={weeklyExpenses.length}
+        categoryTotals={sortedCategories.map(([cat, amt]) => ({ category: cat, amount: amt.toFixed(2) }))}
+      />
+    </div>
+  )
+}
+
+export default Dashboard
