@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import Logo from './Logo'
 import FlyingDollars from './FlyingDollars'
+import FeedbackModal from './FeedbackModal'
 
 function Stars({ rating }) {
   return (
@@ -22,8 +23,14 @@ function Stars({ rating }) {
 function WallOfLove() {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setUser(session.user)
+    })
+
     supabase
       .from('reviews')
       .select('*')
@@ -43,20 +50,29 @@ function WallOfLove() {
     <div className="min-h-screen bg-emerald-50 dark:bg-gray-900 transition-colors duration-300">
       <FlyingDollars />
 
+      {user && (
+        <FeedbackModal
+          isOpen={feedbackOpen}
+          onClose={() => setFeedbackOpen(false)}
+          user={user}
+          profile={null}
+        />
+      )}
+
       <div className="relative z-10 max-w-3xl mx-auto px-4 pt-10 pb-16">
         {/* Top bar */}
         <div className="flex items-center justify-between mb-12">
-          <Link to="/login" className="flex items-center gap-2.5">
+          <Link to={user ? '/dashboard' : '/login'} className="flex items-center gap-2.5">
             <Logo size={30} />
             <span className="font-semibold text-emerald-800 dark:text-emerald-300 tracking-tight">
               SpendSmart
             </span>
           </Link>
           <Link
-            to="/login"
+            to={user ? '/dashboard' : '/login'}
             className="text-sm text-emerald-700 dark:text-emerald-400 font-medium hover:underline"
           >
-            Sign in →
+            {user ? '← Dashboard' : 'Sign in →'}
           </Link>
         </div>
 
@@ -84,7 +100,7 @@ function WallOfLove() {
             ))}
           </div>
         ) : reviews.length === 0 ? (
-          <div className="text-center py-20 text-gray-400 dark:text-gray-500">
+          <div className="text-center py-16 text-gray-400 dark:text-gray-500">
             No reviews yet — be the first!
           </div>
         ) : (
@@ -113,6 +129,29 @@ function WallOfLove() {
             ))}
           </div>
         )}
+
+        {/* Rate section */}
+        <div className="mt-12 text-center">
+          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl px-6 py-8 shadow-sm">
+            <p className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-1">Enjoying SpendSmart?</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">Your review helps others discover the app.</p>
+            {user ? (
+              <button
+                onClick={() => setFeedbackOpen(true)}
+                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-colors"
+              >
+                Write a Review
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="inline-block px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-colors"
+              >
+                Sign in to leave a review
+              </Link>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )
