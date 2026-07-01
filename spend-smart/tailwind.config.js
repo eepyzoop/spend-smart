@@ -18,7 +18,7 @@ export default {
         },
       },
       animation: {
-        slideUp: 'slideUp 0.25s ease-out',
+        slideUp: 'slideUp 0.3s ease-out both',
       },
     },
   },

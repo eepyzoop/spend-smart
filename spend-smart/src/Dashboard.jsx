@@ -1,10 +1,31 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import AiAssistant from './AiAssistant'
 import { useDarkMode } from './useDarkMode'
 import Sidebar from './Sidebar'
 import Logo from './Logo'
+import FlyingDollars from './FlyingDollars'
+
+function useCountUp(target, duration = 750, ready = false) {
+  const [display, setDisplay] = useState(0)
+  useEffect(() => {
+    if (!ready) return
+    if (target === 0) { setDisplay(0); return }
+    const start = performance.now()
+    let raf
+    const tick = (now) => {
+      const p = Math.min((now - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - p, 3)
+      setDisplay(target * eased)
+      if (p < 1) raf = requestAnimationFrame(tick)
+      else setDisplay(target)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target, ready, duration])
+  return display
+}
 
 function getStartOfWeek() {
   const now = new Date()
@@ -98,6 +119,7 @@ function Dashboard() {
   const [newIds, setNewIds] = useState(new Set())
   const [barsAnimated, setBarsAnimated] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [listLoaded, setListLoaded] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -129,6 +151,7 @@ function Dashboard() {
     if (!catRes.error) setCatBudgets(catRes.data || [])
     setFetching(false)
     setTimeout(() => setBarsAnimated(true), 100)
+    setTimeout(() => setListLoaded(true), 50)
   }
 
   async function autoAddRecurring(userId, allExpenses) {
@@ -218,11 +241,28 @@ function Dashboard() {
 
   const hasBudget = profile?.monthly_budget > 0
   const hasCatBudgets = catBudgets.length > 0
+  const displayTotal = useCountUp(weeklyTotal, 750, !fetching)
 
   if (!user) return null
 
   return (
     <div className="min-h-screen bg-emerald-50 dark:bg-gray-900 transition-colors duration-300">
+      {/* Background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', width: '480px', height: '480px',
+          top: '-120px', left: '-120px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(16,185,129,0.13) 0%, transparent 70%)',
+          animation: 'orbDrift1 22s ease-in-out infinite',
+        }} />
+        <div style={{
+          position: 'absolute', width: '400px', height: '400px',
+          bottom: '-100px', right: '-100px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(5,150,105,0.10) 0%, transparent 70%)',
+          animation: 'orbDrift2 28s ease-in-out infinite',
+        }} />
+      </div>
+      <FlyingDollars />
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -260,7 +300,7 @@ function Dashboard() {
         {/* This Week */}
         <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 dark:from-emerald-800 dark:to-emerald-950 text-white rounded-2xl shadow-md p-6 transition-colors duration-300">
           <p className="text-emerald-300 text-xs font-medium uppercase tracking-wider mb-2">This Week</p>
-          <p className="text-4xl font-light tracking-tight">Rs {weeklyTotal.toFixed(2)}</p>
+          <p className="text-4xl font-light tracking-tight">Rs {displayTotal.toFixed(2)}</p>
         </div>
 
         {/* Monthly Budget Progress */}
@@ -409,13 +449,16 @@ function Dashboard() {
             </div>
           ) : (
             <ul className="space-y-3">
-              {expenses.map((expense) => {
+              {expenses.map((expense, index) => {
                 const colors = CATEGORY_COLORS[expense.category] || CATEGORY_COLORS.Other
                 const date = new Date(expense.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                const isNew = newIds.has(expense.id)
+                const shouldAnimate = isNew || !listLoaded
                 return (
                   <li
                     key={expense.id}
-                    className={`bg-white dark:bg-gray-800 rounded-xl border border-emerald-100 dark:border-gray-700 shadow-sm px-5 py-4 flex justify-between items-center hover:shadow-md hover:scale-[1.005] transition-all duration-200 ${newIds.has(expense.id) ? 'animate-slideUp' : ''}`}
+                    className={`bg-white dark:bg-gray-800 rounded-xl border border-emerald-100 dark:border-gray-700 shadow-sm px-5 py-4 flex justify-between items-center hover:shadow-md hover:scale-[1.005] transition-all duration-200 ${shouldAnimate ? 'animate-slideUp' : ''}`}
+                    style={!listLoaded && !isNew ? { animationDelay: `${index * 60}ms`, opacity: 0, animationFillMode: 'forwards' } : {}}
                   >
                     <div className="flex items-center gap-3">
                       <span className="w-3.5 h-3.5 rounded-full flex-shrink-0" style={{ backgroundColor: colors.bar }} />
