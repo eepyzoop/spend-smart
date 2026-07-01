@@ -5,6 +5,7 @@ import AiAssistant from './AiAssistant'
 import { useDarkMode } from './useDarkMode'
 import Sidebar from './Sidebar'
 import Logo from './Logo'
+import FlyingDollars from './FlyingDollars'
 
 const CATEGORY_COLORS = {
   Food:          { bar: '#10b981', light: '#d1fae5' },
@@ -142,6 +143,7 @@ function History() {
 
   return (
     <div className="min-h-screen bg-emerald-50 dark:bg-gray-900 transition-colors duration-300">
+      <FlyingDollars />
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}

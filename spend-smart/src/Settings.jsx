@@ -4,6 +4,7 @@ import { supabase } from './supabaseClient'
 import { useDarkMode } from './useDarkMode'
 import Sidebar from './Sidebar'
 import Logo from './Logo'
+import FlyingDollars from './FlyingDollars'
 
 const CATEGORIES = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Health', 'Bills', 'Other']
 
@@ -89,6 +90,7 @@ function Settings() {
 
   return (
     <div className="min-h-screen bg-emerald-50 dark:bg-gray-900 transition-colors duration-300">
+      <FlyingDollars />
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
