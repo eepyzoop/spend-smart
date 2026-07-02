@@ -1,6 +1,6 @@
 # SpendSmart
 
-A personal expense tracker built for students, designed to make logging and understanding daily spending as frictionless as possible.
+A personal expense tracker, easy to use, designed to make logging and understanding daily spending as frictionless as possible.
 
 Live: [spend-smart-peach.vercel.app](https://spend-smart-peach.vercel.app)
 
