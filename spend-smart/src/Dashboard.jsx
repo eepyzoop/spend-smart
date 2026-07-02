@@ -277,7 +277,7 @@ function Dashboard() {
   }, {})
 
   const hasBudget = profile?.monthly_budget > 0
-  const hasCatBudgets = catBudgets.length > 0
+  const catBudgetMap = Object.fromEntries(catBudgets.map(b => [b.category, b.amount]))
   const displayTotal = useCountUp(weeklyTotal, 750, !fetching)
 
   if (!user) return null
@@ -532,24 +532,35 @@ function Dashboard() {
                     const colors = CATEGORY_COLORS[cat] || CATEGORY_COLORS.Other
                     const rawPct = (total / weeklyTotal) * 100
                     const pct = rawPct > 0 && rawPct < 1 ? '<1' : Math.round(rawPct)
+
+                    const catBudget = catBudgetMap[cat]
+                    const monthlySpent = monthlyCategoryTotals[cat] || 0
+                    const budgetPct = catBudget ? (monthlySpent / catBudget) * 100 : null
+                    const isOver = budgetPct !== null && budgetPct > 100
+                    const isNearly = budgetPct !== null && budgetPct >= 80 && !isOver
+                    const barFill = isOver ? '#ef4444' : isNearly ? '#f59e0b' : colors.bar
+                    const trackFill = isOver ? '#fee2e2' : isNearly ? '#fef3c7' : colors.light
+
                     return (
                       <div key={cat} className="py-1.5">
                         <div className="flex justify-between items-center mb-1">
                           <div className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: colors.bar }} />
+                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: barFill }} />
                             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{cat}</span>
+                            {isOver && <span className="text-[9px] font-bold text-red-500 uppercase tracking-wide">over by Rs {Math.round(monthlySpent - catBudget).toLocaleString()}</span>}
+                            {isNearly && <span className="text-[9px] font-bold text-amber-500 uppercase tracking-wide">nearly</span>}
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs text-gray-400 dark:text-gray-500">{pct}%</span>
                             <span className="text-xs font-semibold text-gray-800 dark:text-gray-100">Rs {Math.round(total).toLocaleString()}</span>
                           </div>
                         </div>
-                        <div className="w-full h-1 rounded-full overflow-hidden" style={{ backgroundColor: colors.light }}>
+                        <div className="w-full h-1 rounded-full overflow-hidden" style={{ backgroundColor: trackFill }}>
                           <div
                             className="h-1 rounded-full"
                             style={{
                               width: barsAnimated ? `${rawPct}%` : '0%',
-                              backgroundColor: colors.bar,
+                              backgroundColor: barFill,
                               transition: 'width 0.6s ease-out',
                             }}
                           />

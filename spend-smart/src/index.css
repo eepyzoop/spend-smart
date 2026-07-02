@@ -19,6 +19,20 @@
   50%       { transform: translate(-50px, -60px) scale(1.15);}
 }
 
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 5px;
+}
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background-color: #059669;
+  border-radius: 999px;
+}
+
 .expense-scroll::-webkit-scrollbar {
   width: 4px;
 }
