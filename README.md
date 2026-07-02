@@ -8,7 +8,8 @@ Live: [spend-smart-peach.vercel.app](https://spend-smart-peach.vercel.app)
 
 ## What it does
 
-SpendSmart lets users log expenses, set monthly budgets, and get a clear picture of where their money is going — broken down by week, month, and category. It includes an AI assistant that can analyse your spending and give personalised advice, and an automated email alert system that notifies you when you exceed a budget limit.
+SpendSmart lets users log expenses, set monthly budgets as well as category-wise spending budgets to get a clear picture of where their money is going, broken down by week, month, and category. It includes an AI assistant that can analyse your spending and give personalised advice, and an automated email alert system that notifies you when you exceed a budget limit.
+Spending history feature so user can see previous month's spending. This history can be downloaded into a csv file offline as well.
 
 ---
 
