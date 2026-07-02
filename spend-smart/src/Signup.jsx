@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import { useDarkMode } from './useDarkMode'
 import Logo from './Logo'
+import FlyingDollars from './FlyingDollars'
 
 function getStrength(pw) {
   if (!pw) return null
@@ -72,6 +73,7 @@ function Signup() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
+      <FlyingDollars />
       <div className="bg-white dark:bg-gray-800 border border-emerald-100 dark:border-gray-700 p-8 rounded-2xl shadow-lg w-full max-w-sm transition-colors duration-300">
         <div className="flex items-center gap-2.5 mb-6">
           <Logo size={34} />
