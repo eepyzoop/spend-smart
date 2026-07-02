@@ -9,7 +9,7 @@ Live: [spend-smart-peach.vercel.app](https://spend-smart-peach.vercel.app)
 ## What it does
 
 SpendSmart lets users log expenses, set monthly budgets as well as category-wise spending budgets to get a clear picture of where their money is going, broken down by week, month, and category. It includes an AI assistant that can analyse your spending and give personalised advice, and an automated email alert system that notifies you when you exceed a budget limit.
-Spending history feature so user can see previous month's spending. This history can be downloaded into a csv file offline as well.
+There is a spending history feature so user can see previous month's spending. This history can be downloaded into a csv file offline as well.
 
 ---
 
@@ -17,9 +17,9 @@ Spending history feature so user can see previous month's spending. This history
 
 ### Expense Tracking
 - Add expenses with amount, category, optional note, and a recurring flag
-- Edit any expense inline via a bottom sheet — no need to delete and re-add
+- Edit any expense inline via a bottom sheet, no need to delete and re-add
 - Delete expenses with instant UI update (optimistic rendering)
-- Recurring expenses are automatically carried forward to the next month — no manual re-entry needed
+- Recurring expenses are automatically carried forward to the next month, no manual re-entry needed
 - Expenses animate in on load with staggered slide-up transitions
 
 ### Dashboard
@@ -30,7 +30,7 @@ Spending history feature so user can see previous month's spending. This history
 - Per-category budget bars that shift from green to amber at 80% and red at 100%
 - "Over by Rs X" labels directly on category bars when limits are exceeded
 - Contextual insights card (daily average spend and biggest single expense) appears automatically when expense list grows long enough to need the space
-- Expense list scrolls inside its own container with a custom thin green scrollbar — the rest of the dashboard stays fixed
+- Expense list scrolls inside its own container with a custom thin green scrollbar, the rest of the dashboard stays fixed
 
 ### Mobile Experience
 - Full-width "+ Add Expense" button immediately below the summary card
@@ -63,7 +63,7 @@ Spending history feature so user can see previous month's spending. This history
 
 ### User Reviews
 - In-app feedback modal with star rating (1-5) and comment
-- Reviews stored in Supabase with an approval flag — only approved reviews appear publicly
+- Reviews stored in Supabase with an approval flag, only approved reviews appear publicly
 - Wall of Love page shows all approved reviews with average rating, reviewer name, and date
 - Publicly accessible without login — serves as social proof for new visitors
 - "Write a Review" button available from the Wall of Love for logged-in users
