@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-export function useInstallPrompt() {
+export function useInstallPrompt(iosDismissKey = 'ss-ios-banner-dismissed') {
   const [installPrompt, setInstallPrompt] = useState(null)
   const [showInstall, setShowInstall] = useState(false)
   const [showIosBanner, setShowIosBanner] = useState(false)
@@ -16,7 +16,7 @@ export function useInstallPrompt() {
     const isSafari = /safari/i.test(navigator.userAgent) && !/chrome|crios|fxios/i.test(navigator.userAgent)
 
     if (isIos && isSafari) {
-      if (!localStorage.getItem('ss-ios-banner-dismissed')) setShowIosBanner(true)
+      if (!localStorage.getItem(iosDismissKey)) setShowIosBanner(true)
       return
     }
 
@@ -43,7 +43,7 @@ export function useInstallPrompt() {
   }
 
   function dismissIosBanner() {
-    localStorage.setItem('ss-ios-banner-dismissed', '1')
+    localStorage.setItem(iosDismissKey, '1')
     setShowIosBanner(false)
   }
 

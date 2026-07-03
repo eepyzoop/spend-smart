@@ -12,7 +12,7 @@ function Login() {
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
   const navigate = useNavigate()
-  const { showInstall, handleInstall, showIosBanner, dismissIosBanner } = useInstallPrompt()
+  const { showInstall, handleInstall, showIosBanner, dismissIosBanner } = useInstallPrompt('ss-ios-login-dismissed')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

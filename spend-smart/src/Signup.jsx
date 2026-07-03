@@ -52,7 +52,7 @@ function Signup() {
 
   const strength = getStrength(password)
   const tooWeak = strength?.level === 'Weak'
-  const { showInstall, handleInstall, showIosBanner, dismissIosBanner } = useInstallPrompt()
+  const { showInstall, handleInstall, showIosBanner, dismissIosBanner } = useInstallPrompt('ss-ios-signup-dismissed')
 
   async function handleSignup(e) {
     e.preventDefault()
