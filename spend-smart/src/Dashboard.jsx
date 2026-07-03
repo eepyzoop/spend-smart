@@ -7,6 +7,8 @@ import { useAuth } from './useAuth'
 import Sidebar from './Sidebar'
 import Logo from './Logo'
 import FeedbackModal from './FeedbackModal'
+import { useInstallPrompt } from './useInstallPrompt'
+import InstallBanner from './InstallBanner'
 
 function useCountUp(target, duration = 750, ready = false) {
   const [display, setDisplay] = useState(0)
@@ -121,6 +123,7 @@ function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [aiOpen, setAiOpen] = useState(false)
+  const { showInstall, handleInstall, showIosBanner, dismissIosBanner } = useInstallPrompt()
   const [listLoaded, setListLoaded] = useState(false)
   const [activeTab, setActiveTab] = useState('expenses')
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -329,6 +332,18 @@ function Dashboard() {
           <Logo size={26} />
           <h1 className="text-lg font-semibold tracking-tight">SpendSmart</h1>
         </div>
+        {showInstall && (
+          <button
+            onClick={handleInstall}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-white/90 hover:bg-emerald-600 dark:hover:bg-emerald-800 border border-white/20 transition-colors whitespace-nowrap"
+            title="Install SpendSmart"
+          >
+            <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="3" x2="12" y2="15"/><polyline points="8 11 12 15 16 11"/><line x1="4" y1="20" x2="20" y2="20"/>
+            </svg>
+            Install
+          </button>
+        )}
         <button
           onClick={() => setAiOpen(o => !o)}
           className="w-8 h-8 rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-800 flex items-center justify-center transition-colors text-base"
@@ -344,6 +359,7 @@ function Dashboard() {
           {dark ? '☀️' : '🌙'}
         </button>
       </nav>
+      {showIosBanner && <InstallBanner onDismiss={dismissIosBanner} />}
 
       <main className="p-4 lg:p-6 space-y-4 lg:space-y-6">
 
