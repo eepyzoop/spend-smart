@@ -1,15 +1,22 @@
-# SpendSmart
-
 A personal expense tracker, easy to use, designed to make logging and understanding daily spending as frictionless as possible.
 
-Live: [spend-smart-peach.vercel.app](https://spend-smart-peach.vercel.app)
+Live: spend-smart-peach.vercel.app
 
 ---
 
 ## What it does
 
-SpendSmart lets users log expenses, set monthly budgets as well as category-wise spending budgets to get a clear picture of where their money is going, broken down by week, month, and category. It includes an AI assistant that can analyse your spending and give personalised advice, and an automated email alert system that notifies you when you exceed a budget limit.
-There is a spending history feature so user can see previous month's spending. This history can be downloaded into a csv file offline as well.
+SpendSmart lets users log expenses, set monthly budgets as well as category-wise spending budgets to get a clear picture of where their money is going, broken down by week, month, and category. It includes an AI assistant that can analyse your spending and give personalised advice, and an automated email alert system that notifies you when you exceed a budget limit. There is a spending history feature so user can see previous month's spending. This history can be downloaded into a csv file offline as well.
+
+---
+
+## Install as an App (PWA)
+
+SpendSmart is a Progressive Web App, it can be installed directly on your device from the browser and used like a native app with its own home screen icon, fullscreen experience, and no browser bar. An Install button is available in the navbar once the app detects your browser supports installation.
+
+- **Android (Chrome):** Visit the live URL, tap the Install button in the navbar or look for the "Add to Home Screen" prompt that appears automatically.
+- **iPhone/iPad (Safari):** Visit the live URL, tap the Share button at the bottom of the screen, then select "Add to Home Screen."
+- **Desktop (Chrome/Edge):** Visit the live URL and click the install icon that appears in the address bar, or use the Install button in the navbar.
 
 ---
 
@@ -101,6 +108,7 @@ There is a spending history feature so user can see previous month's spending. T
 | Email | Resend API |
 | Scheduling | Cron job triggering Edge Function |
 | Deployment | Vercel |
+| PWA | vite-plugin-pwa |
 
 ---
 
