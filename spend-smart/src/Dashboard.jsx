@@ -14,7 +14,7 @@ function useCountUp(target, duration = 750, ready = false) {
   const [display, setDisplay] = useState(0)
   useEffect(() => {
     if (!ready) return
-    if (target === 0) { setDisplay(0); return }
+    if (target === 0 || duration === 0) { setDisplay(target); return }
     const start = performance.now()
     let raf
     const tick = (now) => {
@@ -281,7 +281,8 @@ function Dashboard() {
 
   const hasBudget = profile?.monthly_budget > 0
   const catBudgetMap = Object.fromEntries(catBudgets.map(b => [b.category, b.amount]))
-  const displayTotal = useCountUp(weeklyTotal, 750, !fetching)
+  const isMobile = window.innerWidth < 1024
+  const displayTotal = useCountUp(weeklyTotal, isMobile ? 0 : 750, !fetching)
 
   if (!user) return null
 
