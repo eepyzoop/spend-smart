@@ -36,6 +36,7 @@ SpendSmart is a Progressive Web App, it can be installed directly on your device
 - Category spending breakdown with animated progress bars, colour-coded per category
 - Per-category budget bars that shift from green to amber at 80% and red at 100%
 - "Over by Rs X" labels directly on category bars when limits are exceeded
+- 'RS X left' to show leftover amount on category bar when budget has been set and transactions have been made
 - Contextual insights card (daily average spend and biggest single expense) appears automatically when expense list grows long enough to need the space
 - Expense list scrolls inside its own container with a custom thin green scrollbar, the rest of the dashboard stays fixed
 
