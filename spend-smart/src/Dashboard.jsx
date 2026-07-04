@@ -565,7 +565,11 @@ function Dashboard() {
                             <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: barFill }} />
                             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{cat}</span>
                             {isOver && <span className="text-[9px] font-bold text-red-500 uppercase tracking-wide">over by Rs {Math.round(monthlySpent - catBudget).toLocaleString()}</span>}
-                            {isNearly && <span className="text-[9px] font-bold text-amber-500 uppercase tracking-wide">nearly</span>}
+                            {!isOver && catBudget && monthlySpent > 0 && (
+                              <span className={`text-[9px] font-bold uppercase tracking-wide ${isNearly ? 'text-amber-500' : 'text-emerald-500'}`}>
+                                Rs {Math.round(catBudget - monthlySpent).toLocaleString()} left
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs text-gray-400 dark:text-gray-500">{pct}%</span>
