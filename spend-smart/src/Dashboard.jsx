@@ -135,6 +135,7 @@ function Dashboard() {
   const [editNote, setEditNote] = useState('')
   const [editRecurring, setEditRecurring] = useState(false)
   const [editLoading, setEditLoading] = useState(false)
+  const [editDate, setEditDate] = useState('')
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -229,6 +230,7 @@ function Dashboard() {
     setEditCategory(expense.category)
     setEditNote(expense.note || '')
     setEditRecurring(expense.is_recurring || false)
+    setEditDate(new Date(expense.created_at).toISOString().split('T')[0])
     setEditSheetOpen(true)
   }
 
@@ -240,6 +242,7 @@ function Dashboard() {
       category: editCategory,
       note: editNote,
       is_recurring: editRecurring,
+      created_at: new Date(editDate + 'T12:00:00').toISOString(),
     }
     const { error } = await supabase
       .from('expenses')
@@ -700,6 +703,17 @@ function Dashboard() {
               </button>
             </div>
             <form onSubmit={handleEditExpense} className="space-y-2">
+              <div>
+                <label className="block text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">Date</label>
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                  required
+                  className="w-full border border-emerald-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-gray-700 dark:text-gray-100 transition-colors"
+                />
+              </div>
               <div>
                 <label className="block text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-1">Amount</label>
                 <input
